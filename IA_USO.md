@@ -1,0 +1,31 @@
+# Uso de Inteligencia Artificial
+
+Como pide la cátedra, se documenta acá el uso de IA en el desarrollo de este
+proyecto.
+
+## Herramienta
+
+- **Claude Code** (Anthropic), asistente de desarrollo basado en modelos Claude,
+  usado como copiloto a lo largo de todo el proyecto.
+
+## Cómo se usa
+
+- Diseño de arquitectura, modelo de datos y plan de implementación, discutidos y
+  aprobados por el alumno antes de implementarse (ver historial de commits y
+  `CLAUDE.md`).
+- Generación de código de backend (Django/DRF) y frontend (Vue 3) a partir de
+  especificaciones revisadas por el alumno, etapa por etapa.
+- Configuración de entorno de desarrollo (Node.js, PostgreSQL, variables de
+  entorno) y verificación de que cada etapa funciona antes de avanzar.
+
+## Qué NO hace la IA
+
+- No decide el alcance ni las reglas de negocio del sistema: estos quedan
+  definidos por el alumno y la propuesta de trabajo aprobada por la cátedra.
+- No avanza de etapa sin confirmación explícita del alumno.
+
+## Registro por etapa
+
+| Etapa | Fecha | Resumen de uso de IA |
+|---|---|---|
+| 0 — Setup | 21/10/2026 | Instalación de entorno (Node vía nvm, PostgreSQL vía conda-forge por falta de permisos de administrador), scaffolding de Django+DRF y Vue+Vite, configuración de CORS y variables de entorno, endpoint `/api/health/` de verificación. |
