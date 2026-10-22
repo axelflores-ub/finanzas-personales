@@ -86,6 +86,22 @@ curl -X POST http://127.0.0.1:8000/api/auth/token/refresh/ \
 Todos los endpoints son privados (`IsAuthenticated`) excepto `/api/health/`,
 `/api/auth/token/` y `/api/auth/token/refresh/`.
 
+### Categorías
+
+CRUD completo, scopeado al usuario autenticado (`request.user`, nunca al
+usuario que venga en el body):
+
+```bash
+GET    /api/categorias/          # listar las propias
+POST   /api/categorias/          # crear ({"nombre": "...", "tipo": "INGRESO"|"GASTO"})
+GET    /api/categorias/{id}/
+PATCH  /api/categorias/{id}/
+DELETE /api/categorias/{id}/     # 409 si tiene movimientos o presupuestos asociados
+```
+
+Todas requieren `Authorization: Bearer <access>`. Intentar acceder a una
+categoría de otro usuario devuelve `404` (no se revela que existe).
+
 ### Pruebas automatizadas
 
 ```bash
@@ -104,8 +120,19 @@ cp .env.example .env
 npm run dev
 ```
 
-Abrir `http://localhost:5173`. La pantalla inicial muestra el estado de la
-conexión con el backend (debe decir "Conexión OK").
+Abrir `http://localhost:5173`. Te va a pedir login (usá el usuario de prueba
+sembrado con `seed_test_user`); después de iniciar sesión vas a ver la
+pantalla de Categorías.
+
+### Sesión: qué se guarda y qué limitación tiene
+
+El access y el refresh token viven **solo en memoria** (estado de Pinia), no
+en `localStorage` ni `sessionStorage`. Esto evita que un ataque XSS pueda
+robar un token persistido. La contrapartida, asumida conscientemente para
+este MVP: **recargar la página (F5) cierra la sesión** — no hay nada que
+rehidratar. Si una request responde `401` y el refresh también falla (token
+vencido o inválido), la app cierra la sesión y redirige a `/login` con un
+aviso.
 
 ## Variables de entorno
 
@@ -122,7 +149,7 @@ negocio en [CLAUDE.md](CLAUDE.md).
 
 - [x] Etapa 0 — Setup del proyecto
 - [x] Etapa 1 — Modelo de datos y autenticación
-- [ ] Etapa 2 — CRUD de categorías
+- [x] Etapa 2 — CRUD de categorías e interfaz Vue
 - [ ] Etapa 3 — CRUD de movimientos
 - [ ] Etapa 4 — Dashboard MVP (resumen + gráfico por categoría)
 - [ ] Etapa 5 — Presupuestos (iteración 2)

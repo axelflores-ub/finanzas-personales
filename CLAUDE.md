@@ -66,6 +66,39 @@ PostgreSQL
   profundidad: se van a repetir en los serializers cuando lleguen los
   endpoints CRUD en la Etapa 2/3).
 
+## API y frontend de Categorías (Etapa 2)
+
+- `CategoriaViewSet` (`apps/categorias/views.py`) es un `ModelViewSet`
+  estándar; `get_queryset()` siempre filtra por `usuario=request.user` — así
+  un `GET/PATCH/DELETE /api/categorias/{id}/` sobre una categoría ajena da
+  `404` (nunca `403`, para no confirmar que el recurso existe).
+- `usuario` **no es un campo del serializer**: no se puede mandar desde el
+  body. Se asigna en `CategoriaSerializer.create()` desde
+  `self.context["request"].user`.
+- La unicidad (`usuario`, `nombre`, `tipo`) se valida explícitamente en
+  `CategoriaSerializer.validate()` (no se usa el auto-`UniqueTogetherValidator`
+  de DRF porque `usuario` no es un campo visible del serializer).
+- Borrar una categoría en uso devuelve `409 Conflict` con
+  `{"detail": "..."}` (se captura `ProtectedError` en el `destroy()` del
+  viewset), no un 500 ni un 400.
+- **Frontend — sesión en memoria, no persistida:** `store/auth.js` (Pinia)
+  guarda `accessToken`/`refreshToken` solo en el estado de la store, nunca en
+  `localStorage`/`sessionStorage`. Decisión consciente para este MVP:
+  minimiza superficie de robo de token vía XSS, a costa de que recargar la
+  página cierra la sesión. Documentado también en el README.
+- **Frontend — dos clientes Axios:** `api/authClient.js` (sin interceptores,
+  usado solo por el store para login/refresh/me) y `api/axios.js` (con
+  interceptores de request —agrega el Bearer token— y de response —si hay
+  `401`, intenta refrescar una vez; si falla, desloguea y redirige a
+  `/login`—). Separarlos evita una dependencia circular
+  (`axios.js` → `store/auth.js` → `axios.js`) y evita que un refresh fallido
+  dispare otro refresh en bucle.
+- **Frontend — modales sin JS de Bootstrap:** los diálogos (`ConfirmDialog`,
+  `CategoriaFormModal`) reusan las clases CSS de Bootstrap pero se togglean
+  con `v-if` de Vue, sin importar `bootstrap.bundle.js` ni Popper. Menos
+  dependencias y evita pelear el DOM imperativo de Bootstrap con la
+  reactividad de Vue.
+
 ## Reglas de negocio vigentes
 
 - Un usuario solo puede ver/editar/eliminar sus propios recursos.
@@ -99,8 +132,10 @@ PostgreSQL
   documentación de la cátedra.
 - Backend: apps chicas por dominio, serializers con validaciones explícitas de
   pertenencia y de reglas de negocio (no confiar solo en constraints de DB).
-- Frontend: composables/servicios en `src/api/` por recurso, vistas en
-  `src/views/`, componentes reutilizables en `src/components/<dominio>/`.
+- Frontend: servicios en `src/api/` por recurso (hablan con `apiClient`),
+  store de Pinia en `src/store/`, layouts en `src/layouts/`, vistas en
+  `src/views/`, componentes reutilizables en `src/components/<dominio>/` o
+  `src/components/common/` si son genéricos.
 - Variables de entorno vía `.env` (nunca hardcodeadas ni commiteadas). Cada
   `.env` tiene su `.env.example` correspondiente.
 

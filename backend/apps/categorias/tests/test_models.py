@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 
-from .models import Categoria
+from ..models import Categoria
 
 
 class CategoriaModelTests(TestCase):
