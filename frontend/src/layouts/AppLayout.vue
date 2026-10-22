@@ -24,6 +24,9 @@ function handleLogout() {
         <router-link class="nav-link" active-class="active" :to="{ name: 'categorias' }">
           Categorías
         </router-link>
+        <router-link class="nav-link" active-class="active" :to="{ name: 'movimientos' }">
+          Movimientos
+        </router-link>
       </nav>
 
       <div class="sidebar-user">

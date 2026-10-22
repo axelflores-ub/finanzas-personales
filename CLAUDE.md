@@ -99,6 +99,50 @@ PostgreSQL
   dependencias y evita pelear el DOM imperativo de Bootstrap con la
   reactividad de Vue.
 
+## API y frontend de Movimientos (Etapa 3)
+
+- `MovimientoSerializer` expone `tipo` y `categoria_nombre` como campos
+  **read-only** derivados de `categoria.tipo`/`categoria.nombre`
+  (`source="categoria.tipo"`): el modelo no duplica el tipo, pero la API
+  igual lo devuelve listo para mostrar sin que el frontend tenga que cruzar
+  dos listas.
+- La pertenencia de `categoria` al usuario se valida en
+  `MovimientoSerializer.validate_categoria()`, mismo patrón que en
+  `CategoriaSerializer`.
+- **Filtros implementados a mano en `MovimientoViewSet.get_queryset()`, sin
+  `django-filter`.** Se evaluó usarlo, pero su comportamiento por defecto
+  ante un parámetro inválido es ignorarlo o devolver queryset vacío en
+  silencio, no un `400` — y necesitábamos mensajes de error explícitos para
+  fecha inválida, tipo inválido y rango `fecha_desde > fecha_hasta`. Filtrar
+  a mano con `rest_framework.exceptions.ValidationError` da control total
+  sobre esos mensajes sin sumar una dependencia. `django-filter` se sacó de
+  `requirements.txt`.
+  - Ojo con `django.utils.dateparse.parse_date`: ante una fecha
+    sintácticamente válida pero imposible (`"2026-99-99"`) no devuelve
+    `None`, **lanza `ValueError`** al construir el `date`. Hay que
+    envolverlo en `try/except`, si no el request explota con 500 en vez de
+    devolver el 400 esperado.
+- `categoria` como filtro: si el id no es numérico, `400`. Si es numérico
+  pero no existe o es de otro usuario, lista vacía (no se revela si existe).
+- **Frontend — formato de moneda:** `src/utils/format.js` arma
+  `"$ 25.000,00"` a mano (prefijo `"$ "` + `Intl.NumberFormat('es-AR')`), no
+  con `Intl...{style:'currency'}`, porque ese formato varía el símbolo/espacio
+  según el entorno (ICU) y queríamos el resultado exacto pedido.
+- **Frontend — selector de categoría dependiente del tipo:** tanto el
+  formulario de alta/edición como la barra de filtros filtran las categorías
+  disponibles según el tipo elegido (`INGRESO`/`GASTO`), y si no hay
+  categorías de ese tipo el formulario lo avisa y deshabilita "Guardar" en
+  vez de dejar guardar con la categoría vacía.
+- **Bug real encontrado en la verificación manual de esta etapa** (corregido
+  antes del commit): al abrir "Nuevo movimiento" por primera vez, el tipo por
+  defecto (`GASTO`) no cambiaba de valor, así que el `watch` que
+  auto-selecciona la primera categoría disponible nunca disparaba —
+  `categoriaId` quedaba en `''` aunque el `<select>` mostrara visualmente la
+  única opción (comportamiento nativo del navegador, no de Vue). Se mandaba
+  `categoria: ""` y el backend respondía 400. Fix en
+  `MovimientoFormModal.vue`: calcular la categoría por defecto explícitamente
+  al abrir el modal, no solo reaccionar a cambios de `tipo`.
+
 ## Reglas de negocio vigentes
 
 - Un usuario solo puede ver/editar/eliminar sus propios recursos.

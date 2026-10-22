@@ -102,6 +102,33 @@ DELETE /api/categorias/{id}/     # 409 si tiene movimientos o presupuestos asoci
 Todas requieren `Authorization: Bearer <access>`. Intentar acceder a una
 categoría de otro usuario devuelve `404` (no se revela que existe).
 
+### Movimientos
+
+CRUD completo, scopeado al usuario autenticado. El `tipo` (INGRESO/GASTO) no
+se manda ni se guarda: se deriva de `categoria.tipo` y viene de regalo en las
+respuestas.
+
+```bash
+GET    /api/movimientos/         # listar los propios, más recientes primero
+POST   /api/movimientos/         # {"categoria": id, "monto": "1500.00", "fecha": "2026-10-15", "descripcion": "..."}
+GET    /api/movimientos/{id}/
+PATCH  /api/movimientos/{id}/
+DELETE /api/movimientos/{id}/
+```
+
+Filtros combinables por query params (`GET /api/movimientos/?...`):
+
+| Parámetro | Ejemplo | Notas |
+|---|---|---|
+| `fecha_desde` | `2026-10-01` | `400` si el formato no es `YYYY-MM-DD` o la fecha no existe |
+| `fecha_hasta` | `2026-10-31` | ídem; `400` si `fecha_desde > fecha_hasta` |
+| `tipo` | `INGRESO` o `GASTO` | `400` si no es uno de esos dos valores |
+| `categoria` | `3` | id numérico; `400` si no es numérico (si es numérico pero no existe o es de otro usuario, devuelve lista vacía, no error) |
+
+La categoría debe pertenecer al usuario autenticado (`400` si no) y el monto
+debe ser mayor a 0 (`400` si no). Igual que con categorías, acceder a un
+movimiento ajeno por id da `404`.
+
 ### Pruebas automatizadas
 
 ```bash
@@ -122,7 +149,9 @@ npm run dev
 
 Abrir `http://localhost:5173`. Te va a pedir login (usá el usuario de prueba
 sembrado con `seed_test_user`); después de iniciar sesión vas a ver la
-pantalla de Categorías.
+pantalla de Categorías. Desde el menú lateral también se accede a
+**Movimientos**, donde se registran ingresos y gastos (requiere tener al
+menos una categoría del tipo correspondiente creada primero).
 
 ### Sesión: qué se guarda y qué limitación tiene
 
@@ -150,7 +179,7 @@ negocio en [CLAUDE.md](CLAUDE.md).
 - [x] Etapa 0 — Setup del proyecto
 - [x] Etapa 1 — Modelo de datos y autenticación
 - [x] Etapa 2 — CRUD de categorías e interfaz Vue
-- [ ] Etapa 3 — CRUD de movimientos
+- [x] Etapa 3 — CRUD de movimientos financieros
 - [ ] Etapa 4 — Dashboard MVP (resumen + gráfico por categoría)
 - [ ] Etapa 5 — Presupuestos (iteración 2)
 - [ ] Etapa 6 — Evolución mensual (iteración 2)
