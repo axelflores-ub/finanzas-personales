@@ -13,7 +13,12 @@ const routes = [
     path: '/',
     component: () => import('../layouts/AppLayout.vue'),
     children: [
-      { path: '', redirect: { name: 'categorias' } },
+      { path: '', redirect: { name: 'dashboard' } },
+      {
+        path: 'dashboard',
+        name: 'dashboard',
+        component: () => import('../views/DashboardView.vue'),
+      },
       {
         path: 'categorias',
         name: 'categorias',
@@ -41,7 +46,7 @@ router.beforeEach((to) => {
   }
 
   if (to.name === 'login' && authStore.isAuthenticated) {
-    return { name: 'categorias' }
+    return { name: 'dashboard' }
   }
 
   return true

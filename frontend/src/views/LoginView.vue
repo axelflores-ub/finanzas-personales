@@ -21,7 +21,7 @@ async function handleSubmit() {
   try {
     await authStore.login(username.value, password.value)
     const redirectTo = typeof route.query.redirect === 'string' ? route.query.redirect : null
-    router.push(redirectTo ?? { name: 'categorias' })
+    router.push(redirectTo ?? { name: 'dashboard' })
   } catch (error) {
     if (error.response?.status === 401) {
       errorMessage.value = 'Usuario o contraseña incorrectos.'

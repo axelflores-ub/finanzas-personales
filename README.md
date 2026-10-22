@@ -129,6 +129,56 @@ La categoría debe pertenecer al usuario autenticado (`400` si no) y el monto
 debe ser mayor a 0 (`400` si no). Igual que con categorías, acceder a un
 movimiento ajeno por id da `404`.
 
+### Dashboard
+
+Dos endpoints de solo lectura, agregados con el ORM (`Sum`) sobre los
+movimientos del usuario autenticado — no hay tablas ni resultados
+precalculados. `mes` y `anio` son obligatorios en ambos; si faltan, no son
+numéricos o están fuera de rango (`mes` 1-12, `anio` 2000-2100), devuelven
+`400` con el detalle del parámetro inválido. Todos los importes viajan como
+string decimal (`"1500.00"`), nunca `float`.
+
+**`GET /api/dashboard/resumen/?mes=10&anio=2026`**
+
+```json
+{
+  "mes": 10,
+  "anio": 2026,
+  "ingresos": "150000.00",
+  "gastos": "13000.75",
+  "balance": "136999.25"
+}
+```
+
+**`GET /api/dashboard/gastos-por-categoria/?mes=10&anio=2026`**
+
+```json
+{
+  "mes": 10,
+  "anio": 2026,
+  "total_gastos": "13000.75",
+  "categorias": [
+    {
+      "categoria_id": 4,
+      "categoria_nombre": "Alimentación",
+      "monto": "9200.75",
+      "porcentaje": "70.77"
+    },
+    {
+      "categoria_id": 5,
+      "categoria_nombre": "Transporte",
+      "monto": "3800.00",
+      "porcentaje": "29.23"
+    }
+  ]
+}
+```
+
+Sin movimientos en el período: `resumen` devuelve los tres totales en
+`"0.00"`; `gastos-por-categoria` devuelve `"total_gastos": "0.00"` y
+`"categorias": []`. Una categoría de gasto sin movimientos en el período
+simplemente no aparece en `categorias` (no se manda con monto 0).
+
 ### Pruebas automatizadas
 
 ```bash
@@ -148,10 +198,11 @@ npm run dev
 ```
 
 Abrir `http://localhost:5173`. Te va a pedir login (usá el usuario de prueba
-sembrado con `seed_test_user`); después de iniciar sesión vas a ver la
-pantalla de Categorías. Desde el menú lateral también se accede a
-**Movimientos**, donde se registran ingresos y gastos (requiere tener al
-menos una categoría del tipo correspondiente creada primero).
+sembrado con `seed_test_user`); después de iniciar sesión vas a ver el
+**Dashboard** (resumen del mes actual + gráfico de gastos por categoría).
+Desde el menú lateral también se accede a **Categorías** y **Movimientos**,
+donde se registran ingresos y gastos (requiere tener al menos una categoría
+del tipo correspondiente creada primero).
 
 ### Sesión: qué se guarda y qué limitación tiene
 
@@ -180,7 +231,7 @@ negocio en [CLAUDE.md](CLAUDE.md).
 - [x] Etapa 1 — Modelo de datos y autenticación
 - [x] Etapa 2 — CRUD de categorías e interfaz Vue
 - [x] Etapa 3 — CRUD de movimientos financieros
-- [ ] Etapa 4 — Dashboard MVP (resumen + gráfico por categoría)
+- [x] Etapa 4 — Dashboard financiero MVP (resumen + gráfico por categoría)
 - [ ] Etapa 5 — Presupuestos (iteración 2)
 - [ ] Etapa 6 — Evolución mensual (iteración 2)
 - [ ] Etapa 7 — Cierre y documentación final

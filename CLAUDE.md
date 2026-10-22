@@ -143,6 +143,39 @@ PostgreSQL
   `MovimientoFormModal.vue`: calcular la categoría por defecto explícitamente
   al abrir el modal, no solo reaccionar a cambios de `tipo`.
 
+## API y frontend de Dashboard (Etapa 4)
+
+- `apps/dashboard` no tiene modelos: son dos vistas de solo lectura
+  (`resumen`, `gastos_por_categoria`) que agregan sobre `Movimiento` con
+  `Sum` del ORM. Sin tablas ni resultados precalculados, como pide el
+  alcance — se recalculan en cada request.
+- `mes`/`anio` se validan a mano en `apps/dashboard/validators.py`
+  (`parse_periodo`), compartido por ambas vistas: obligatorios, enteros,
+  `mes` 1-12, `anio` 2000-2100. Mismo criterio que los filtros de
+  movimientos — `400` explícito en vez de fallar en silencio.
+- Todo cálculo usa `Decimal` de punta a punta (incluido el porcentaje:
+  `Decimal / Decimal * 100`, nunca se castea a `float`). Las respuestas
+  serializan los montos como **string** (`"150000.00"`), no como número
+  JSON, para que no haya ambigüedad de precisión del lado del cliente —
+  mismo criterio que `monto` en `Movimiento`.
+- `gastos_por_categoria` arma la lista a partir de
+  `.values("categoria_id", "categoria__nombre").annotate(total=Sum("monto"))`:
+  una categoría de gasto sin movimientos en el período simplemente no genera
+  fila en el `GROUP BY`, así que no aparece en la respuesta (no se filtra
+  después "a mano").
+- **Frontend — Chart.js sin wrapper:** se usa la librería directa
+  (`new Chart(canvasRef.value, {...})`) en vez de `vue-chartjs`, con un
+  `<canvas>` referenciado por `ref` de Vue. El ciclo de vida se maneja a
+  mano: `destruirChart()` antes de cada recreación y en `onBeforeUnmount`,
+  para no dejar instancias huérfanas ni pelear el "Canvas is already in
+  use" de Chart.js cuando el `v-if` del estado vacío desmonta el `<canvas>`.
+  Se optó por destruir y recrear en cada cambio de período en vez de
+  `chart.update()` in-place: con pocas categorías el costo es insignificante
+  y el código queda más simple/predecible.
+- **Dashboard es la pantalla por defecto tras el login:** el redirect raíz
+  del router (`/` y el fallback de `LoginView` sin `redirect` en la query)
+  apunta a `{ name: 'dashboard' }` en vez de `categorias`.
+
 ## Reglas de negocio vigentes
 
 - Un usuario solo puede ver/editar/eliminar sus propios recursos.

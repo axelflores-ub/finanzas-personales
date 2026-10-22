@@ -21,6 +21,9 @@ function handleLogout() {
       </div>
 
       <nav class="sidebar-nav">
+        <router-link class="nav-link" active-class="active" :to="{ name: 'dashboard' }">
+          Dashboard
+        </router-link>
         <router-link class="nav-link" active-class="active" :to="{ name: 'categorias' }">
           Categorías
         </router-link>
