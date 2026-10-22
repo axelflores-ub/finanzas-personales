@@ -16,7 +16,10 @@ Ramiro Maquieira. Fecha de presentación: 26/11/2026.
 - **Base de datos:** PostgreSQL.
 - **Gráficos:** Chart.js.
 - **Autenticación:** JWT (`djangorestframework-simplejwt`), sin registro público de
-  usuarios por ahora (un único usuario creado manualmente).
+  usuarios por ahora. El único usuario se crea/actualiza con
+  `python manage.py seed_test_user`, que lee `TEST_USER_USERNAME` /
+  `TEST_USER_PASSWORD` / `TEST_USER_EMAIL` desde `backend/.env` (nunca se
+  commitea una contraseña).
 - **Control de versiones:** Git y GitHub.
 
 ## Arquitectura
@@ -33,21 +36,47 @@ PostgreSQL
 
 - Backend y frontend viven en carpetas separadas (`backend/`, `frontend/`) dentro
   de un mismo repositorio.
-- El backend se organiza en apps de Django por dominio, bajo `backend/apps/`
-  (`core`, y luego `categorias`, `movimientos`, `presupuestos`, `dashboard`).
+- El backend se organiza en apps de Django por dominio, bajo `backend/apps/`:
+  `core` (infraestructura: health check, auth JWT), `categorias`,
+  `movimientos`, `presupuestos` y, en Etapa 4, `dashboard`.
 - CORS está restringido únicamente a los orígenes de desarrollo autorizados
   (ver `CORS_ALLOWED_ORIGINS` en `backend/.env`).
 - No hay tabla de moneda: todos los montos se asumen en **ARS**. Si se necesitara
   multi-moneda a futuro, se agregaría un campo `moneda` sin romper el modelo
   actual.
+- `IsAuthenticated` es el permiso por defecto de DRF. Los únicos endpoints
+  públicos son `/api/health/`, `/api/auth/token/` y
+  `/api/auth/token/refresh/`.
+
+## Modelo de datos (Etapa 1)
+
+- **`Categoria`** (`apps/categorias`): `usuario` (FK→User, `CASCADE`),
+  `nombre`, `tipo` (`INGRESO`/`GASTO`), `creado_en`. Único por
+  (`usuario`, `nombre`, `tipo`).
+- **`Movimiento`** (`apps/movimientos`): `usuario` (FK→User, `CASCADE`),
+  `categoria` (FK→Categoria, `PROTECT`), `monto` (`DecimalField`, 2 decimales,
+  > 0), `fecha`, `descripcion` (opcional). El tipo del movimiento se infiere de
+  `categoria.tipo`, no se duplica.
+- **`Presupuesto`** (`apps/presupuestos`): `usuario` (FK→User, `CASCADE`),
+  `categoria` (FK→Categoria, `PROTECT`, debe ser tipo `GASTO`), `mes`, `anio`,
+  `monto_limite` (`DecimalField`, > 0). Único por
+  (`usuario`, `categoria`, `mes`, `anio`).
+- La pertenencia de `categoria` al `usuario`, y la restricción de tipo `GASTO`
+  en `Presupuesto`, se validan en `clean()` de cada modelo (defensa en
+  profundidad: se van a repetir en los serializers cuando lleguen los
+  endpoints CRUD en la Etapa 2/3).
 
 ## Reglas de negocio vigentes
 
 - Un usuario solo puede ver/editar/eliminar sus propios recursos.
 - Las categorías asignadas a movimientos y presupuestos deben pertenecer siempre
-  al usuario autenticado (se valida en el serializer, no solo en el frontend).
+  al usuario autenticado (validado en `clean()` del modelo; se repite en el
+  serializer cuando exista).
 - `Categoria`: único por (`usuario`, `nombre`, `tipo`).
-- Los montos usan `DecimalField`, nunca `float`.
+- Los montos usan `DecimalField` (2 decimales), nunca `float`, y deben ser > 0
+  (`MinValueValidator` + `CheckConstraint` en la base).
+- Un `Presupuesto` solo puede asociarse a una `Categoria` de tipo `GASTO`.
+- No puede haber dos presupuestos para la misma categoría, mes y año.
 - No se puede eliminar una categoría con movimientos o presupuestos asociados
   (`on_delete=PROTECT`).
 
@@ -85,7 +114,11 @@ entorno se instaló sin privilegios de admin:
   (`~/miniforge3`), entorno conda `finanzas` (Python 3.12, PostgreSQL 16).
 - El servidor PostgreSQL corre localmente con los datos en
   `~/.local/share/postgres-finanzas`, arrancado manualmente con `pg_ctl`
-  (no es un servicio del sistema).
+  (no es un servicio del sistema). El rol `finanzas_user` tiene `CREATEDB`
+  para que `manage.py test` pueda crear la base de test.
+- El repositorio vive en `~/Projects/finanzas-personales` (se movió fuera de
+  `~/Desktop` en la Etapa 0 por un problema de permisos de macOS con las
+  herramientas de vista previa).
 
 Ver [README.md](README.md) para los pasos de instalación y ejecución.
 

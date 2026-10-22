@@ -51,6 +51,47 @@ curl http://127.0.0.1:8000/api/health/
 Si `database` no da `"ok"`, revisar que PostgreSQL esté corriendo y que las
 credenciales en `.env` sean correctas.
 
+### Usuario de prueba y autenticación (JWT)
+
+No hay registro público de usuarios. Para desarrollo local se crea un único
+usuario de prueba a partir de variables de entorno (nunca se commitean
+credenciales):
+
+```bash
+# En backend/.env, completar:
+# TEST_USER_USERNAME=...
+# TEST_USER_PASSWORD=...
+# TEST_USER_EMAIL=...
+
+python manage.py seed_test_user
+```
+
+Con ese usuario podés pedir un token:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/auth/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "tu-usuario", "password": "tu-contraseña"}'
+# {"access": "...", "refresh": "..."}
+
+curl http://127.0.0.1:8000/api/auth/me/ \
+  -H "Authorization: Bearer <access>"
+# {"username": "...", "email": "..."}
+
+curl -X POST http://127.0.0.1:8000/api/auth/token/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{"refresh": "<refresh>"}'
+```
+
+Todos los endpoints son privados (`IsAuthenticated`) excepto `/api/health/`,
+`/api/auth/token/` y `/api/auth/token/refresh/`.
+
+### Pruebas automatizadas
+
+```bash
+python manage.py test apps
+```
+
 ## Frontend
 
 ```bash
@@ -80,7 +121,7 @@ Desarrollo incremental por etapas — ver el plan completo y las reglas de
 negocio en [CLAUDE.md](CLAUDE.md).
 
 - [x] Etapa 0 — Setup del proyecto
-- [ ] Etapa 1 — Modelo de datos y autenticación
+- [x] Etapa 1 — Modelo de datos y autenticación
 - [ ] Etapa 2 — CRUD de categorías
 - [ ] Etapa 3 — CRUD de movimientos
 - [ ] Etapa 4 — Dashboard MVP (resumen + gráfico por categoría)

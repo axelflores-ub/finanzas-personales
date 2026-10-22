@@ -29,3 +29,4 @@ proyecto.
 | Etapa | Fecha | Resumen de uso de IA |
 |---|---|---|
 | 0 — Setup | 21/10/2026 | Instalación de entorno (Node vía nvm, PostgreSQL vía conda-forge por falta de permisos de administrador), scaffolding de Django+DRF y Vue+Vite, configuración de CORS y variables de entorno, endpoint `/api/health/` de verificación. |
+| 1 — Modelo de datos y autenticación | 21/10/2026 | Modelos `Categoria`/`Movimiento`/`Presupuesto` con restricciones (unicidad, montos positivos, `PROTECT`), migraciones, registro en Django Admin, autenticación JWT (`djangorestframework-simplejwt`), comando `seed_test_user`, y 19 pruebas automatizadas de modelos y autenticación. |

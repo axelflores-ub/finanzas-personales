@@ -6,6 +6,7 @@ https://docs.djangoproject.com/en/6.1/topics/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -49,6 +50,9 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "apps.core",
+    "apps.categorias",
+    "apps.movimientos",
+    "apps.presupuestos",
 ]
 
 MIDDLEWARE = [
@@ -130,14 +134,24 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Django REST Framework
 # https://www.django-rest-framework.org/api-guide/settings/
-# NOTA: todavía no hay autenticación implementada (llega en la Etapa 1).
-# Por eso el default es AllowAny; se va a endurecer a IsAuthenticated
-# cuando se agregue JWT.
+# IsAuthenticated es el default: solo quedan públicos los endpoints que lo
+# declaran explícitamente (health check y obtención/refresh de token).
 
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}
+
+# Simple JWT
+# https://django-rest-framework-simplejwt.readthedocs.io/
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
 
 
