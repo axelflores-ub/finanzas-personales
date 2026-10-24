@@ -8,7 +8,7 @@ from django.test import TestCase
 
 from apps.categorias.models import Categoria
 
-from .models import Presupuesto
+from ..models import Presupuesto
 
 
 class PresupuestoModelTests(TestCase):

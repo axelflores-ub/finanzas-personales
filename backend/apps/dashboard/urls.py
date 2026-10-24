@@ -9,4 +9,9 @@ urlpatterns = [
         views.gastos_por_categoria,
         name="dashboard-gastos-por-categoria",
     ),
+    path(
+        "dashboard/presupuestos-resumen/",
+        views.presupuestos_resumen,
+        name="dashboard-presupuestos-resumen",
+    ),
 ]

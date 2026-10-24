@@ -179,6 +179,60 @@ Sin movimientos en el período: `resumen` devuelve los tres totales en
 `"categorias": []`. Una categoría de gasto sin movimientos en el período
 simplemente no aparece en `categorias` (no se manda con monto 0).
 
+**`GET /api/dashboard/presupuestos-resumen/?mes=10&anio=2026`** — separado de
+`resumen`: acá `gasto_real_presupuestado` solo suma categorías que tienen un
+presupuesto en el período (no el gasto general de `resumen.gastos`).
+
+```json
+{
+  "mes": 10,
+  "anio": 2026,
+  "presupuesto_total": "150000.00",
+  "gasto_real_presupuestado": "90000.00",
+  "porcentaje_utilizado": "60.00"
+}
+```
+
+### Presupuestos
+
+CRUD completo sobre el modelo `Presupuesto` ya existente (Etapa 1), scopeado
+al usuario autenticado. `gasto_real`, `porcentaje_utilizado` y `restante` se
+calculan **en cada request** con `Sum`/`Decimal` sobre `Movimiento` — no se
+guardan en la base, así que siempre reflejan los movimientos actuales sin
+necesidad de señales ni recálculos manuales.
+
+```bash
+GET    /api/presupuestos/              # listar los propios (filtra ?mes=&anio= si se pasan)
+POST   /api/presupuestos/              # {"categoria": id, "mes": 10, "anio": 2026, "monto_limite": "150000.00"}
+GET    /api/presupuestos/{id}/
+PATCH  /api/presupuestos/{id}/
+DELETE /api/presupuestos/{id}/
+```
+
+Respuesta de cada presupuesto:
+
+```json
+{
+  "id": 1,
+  "categoria": 4,
+  "categoria_nombre": "Alimentación",
+  "mes": 10,
+  "anio": 2026,
+  "monto_limite": "150000.00",
+  "gasto_real": "90000.00",
+  "porcentaje_utilizado": "60.00",
+  "restante": "60000.00",
+  "creado_en": "2026-10-24T17:37:23.767395-03:00"
+}
+```
+
+Reglas: la categoría debe ser del usuario autenticado y de tipo `GASTO`
+(`400` si no); único por (`usuario`, `categoria`, `mes`, `anio`) (`400` si
+duplicado); `monto_limite` > 0 (`400` si no). Si el gasto supera el límite,
+`porcentaje_utilizado` puede superar `100` y `restante` da negativo (lo
+usa el frontend para mostrar "Excedido en $X" en vez de un número negativo
+confuso).
+
 ### Pruebas automatizadas
 
 ```bash
@@ -199,10 +253,10 @@ npm run dev
 
 Abrir `http://localhost:5173`. Te va a pedir login (usá el usuario de prueba
 sembrado con `seed_test_user`); después de iniciar sesión vas a ver el
-**Dashboard** (resumen del mes actual + gráfico de gastos por categoría).
-Desde el menú lateral también se accede a **Categorías** y **Movimientos**,
-donde se registran ingresos y gastos (requiere tener al menos una categoría
-del tipo correspondiente creada primero).
+**Dashboard** (resumen del mes actual + gráfico de gastos por categoría +
+mini-resumen de presupuestos). Desde el menú lateral también se accede a
+**Categorías**, **Movimientos** y **Presupuestos** (límites de gasto por
+categoría, con barra de progreso: verde <80%, amarillo 80-99%, rojo ≥100%).
 
 ### Sesión: qué se guarda y qué limitación tiene
 
@@ -232,7 +286,7 @@ negocio en [CLAUDE.md](CLAUDE.md).
 - [x] Etapa 2 — CRUD de categorías e interfaz Vue
 - [x] Etapa 3 — CRUD de movimientos financieros
 - [x] Etapa 4 — Dashboard financiero MVP (resumen + gráfico por categoría)
-- [ ] Etapa 5 — Presupuestos (iteración 2)
+- [x] Etapa 5 — Presupuestos mensuales
 - [ ] Etapa 6 — Evolución mensual (iteración 2)
 - [ ] Etapa 7 — Cierre y documentación final
 

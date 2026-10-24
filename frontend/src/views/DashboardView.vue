@@ -2,25 +2,10 @@
 import { ArcElement, Chart, DoughnutController, Legend, Tooltip } from 'chart.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
-import { getGastosPorCategoria, getResumen } from '../api/dashboard'
-import { formatMonto } from '../utils/format'
+import { getGastosPorCategoria, getPresupuestosResumen, getResumen } from '../api/dashboard'
+import { MESES, aniosDisponibles, claseUtilizacion, formatMonto } from '../utils/format'
 
 Chart.register(ArcElement, DoughnutController, Tooltip, Legend)
-
-const MESES = [
-  'Enero',
-  'Febrero',
-  'Marzo',
-  'Abril',
-  'Mayo',
-  'Junio',
-  'Julio',
-  'Agosto',
-  'Septiembre',
-  'Octubre',
-  'Noviembre',
-  'Diciembre',
-]
 
 const PALETA = [
   '#fca311',
@@ -37,18 +22,12 @@ const hoy = new Date()
 const mes = ref(hoy.getMonth() + 1)
 const anio = ref(hoy.getFullYear())
 
-const aniosDisponibles = computed(() => {
-  const actual = hoy.getFullYear()
-  const anios = []
-  for (let a = actual - 3; a <= actual + 1; a++) anios.push(a)
-  return anios
-})
-
 const loading = ref(true)
 const error = ref('')
 
 const resumen = ref(null)
 const gastosPorCategoria = ref([])
+const presupuestosResumen = ref(null)
 
 const balanceClass = computed(() => {
   const balance = Number(resumen.value?.balance ?? 0)
@@ -62,16 +41,19 @@ async function cargarDashboard() {
   loading.value = true
   error.value = ''
   try {
-    const [resumenRes, gastosRes] = await Promise.all([
+    const [resumenRes, gastosRes, presupuestosRes] = await Promise.all([
       getResumen(mes.value, anio.value),
       getGastosPorCategoria(mes.value, anio.value),
+      getPresupuestosResumen(mes.value, anio.value),
     ])
     resumen.value = resumenRes.data
     gastosPorCategoria.value = gastosRes.data.categorias
+    presupuestosResumen.value = presupuestosRes.data
   } catch {
     error.value = 'No se pudo cargar el dashboard. Reintentá más tarde.'
     resumen.value = null
     gastosPorCategoria.value = []
+    presupuestosResumen.value = null
   } finally {
     loading.value = false
   }
@@ -150,7 +132,7 @@ onBeforeUnmount(destruirChart)
           aria-label="Año"
           @change="cargarDashboard"
         >
-          <option v-for="a in aniosDisponibles" :key="a" :value="a">{{ a }}</option>
+          <option v-for="a in aniosDisponibles()" :key="a" :value="a">{{ a }}</option>
         </select>
       </div>
     </div>
@@ -204,6 +186,50 @@ onBeforeUnmount(destruirChart)
           </div>
           <div v-else class="chart-wrapper">
             <canvas ref="canvasRef"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mt-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0">Presupuestos del período</h2>
+            <router-link :to="{ name: 'presupuestos' }" class="small">Ver detalle →</router-link>
+          </div>
+
+          <div
+            v-if="!presupuestosResumen || presupuestosResumen.presupuesto_total === '0.00'"
+            class="text-center text-muted py-4"
+          >
+            No definiste presupuestos para este período.
+            <router-link :to="{ name: 'presupuestos' }">Creá uno</router-link>.
+          </div>
+          <div v-else>
+            <div class="row g-3 mb-3 text-center text-md-start">
+              <div class="col-12 col-md-4">
+                <div class="text-muted small">Presupuesto total</div>
+                <div class="h5 mb-0">{{ formatMonto(presupuestosResumen.presupuesto_total) }}</div>
+              </div>
+              <div class="col-12 col-md-4">
+                <div class="text-muted small">Gasto real</div>
+                <div class="h5 mb-0">
+                  {{ formatMonto(presupuestosResumen.gasto_real_presupuestado) }}
+                </div>
+              </div>
+              <div class="col-12 col-md-4">
+                <div class="text-muted small">Utilizado</div>
+                <div class="h5 mb-0">{{ presupuestosResumen.porcentaje_utilizado }}%</div>
+              </div>
+            </div>
+            <div class="progress" style="height: 8px">
+              <div
+                class="progress-bar"
+                :class="`bg-${claseUtilizacion(presupuestosResumen.porcentaje_utilizado)}`"
+                :style="{
+                  width: Math.min(Number(presupuestosResumen.porcentaje_utilizado), 100) + '%',
+                }"
+              ></div>
+            </div>
           </div>
         </div>
       </div>

@@ -6,12 +6,18 @@ from rest_framework.test import APITestCase
 
 from apps.categorias.models import Categoria
 from apps.movimientos.models import Movimiento
+from apps.presupuestos.models import Presupuesto
 
 RESUMEN_URL = "/api/dashboard/resumen/"
 GASTOS_POR_CATEGORIA_URL = "/api/dashboard/gastos-por-categoria/"
+PRESUPUESTOS_RESUMEN_URL = "/api/dashboard/presupuestos-resumen/"
 
 
 class DashboardApiAuthTests(APITestCase):
+    def test_presupuestos_resumen_sin_autenticacion_devuelve_401(self):
+        response = self.client.get(PRESUPUESTOS_RESUMEN_URL, {"mes": 10, "anio": 2026})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_resumen_sin_autenticacion_devuelve_401(self):
         response = self.client.get(RESUMEN_URL, {"mes": 10, "anio": 2026})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -226,4 +232,96 @@ class DashboardGastosPorCategoriaTests(APITestCase):
 
     def test_parametros_invalidos_devuelve_400(self):
         response = self.client.get(GASTOS_POR_CATEGORIA_URL, {"mes": "x", "anio": 2026})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class DashboardPresupuestosResumenTests(APITestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username="ana", password="x")
+        self.client.force_authenticate(user=self.user)
+
+        self.cat_alimentacion = Categoria.objects.create(
+            usuario=self.user, nombre="Alimentación", tipo=Categoria.Tipo.GASTO
+        )
+        self.cat_transporte = Categoria.objects.create(
+            usuario=self.user, nombre="Transporte", tipo=Categoria.Tipo.GASTO
+        )
+        self.cat_entretenimiento = Categoria.objects.create(
+            usuario=self.user, nombre="Entretenimiento", tipo=Categoria.Tipo.GASTO
+        )
+
+    def test_totales_y_porcentaje(self):
+        Presupuesto.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, mes=10, anio=2026,
+            monto_limite=Decimal("100000.00"),
+        )
+        Presupuesto.objects.create(
+            usuario=self.user, categoria=self.cat_transporte, mes=10, anio=2026,
+            monto_limite=Decimal("50000.00"),
+        )
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, monto=Decimal("60000.00"),
+            fecha="2026-10-05",
+        )
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_transporte, monto=Decimal("30000.00"),
+            fecha="2026-10-10",
+        )
+
+        response = self.client.get(PRESUPUESTOS_RESUMEN_URL, {"mes": 10, "anio": 2026})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["presupuesto_total"], "150000.00")
+        self.assertEqual(response.data["gasto_real_presupuestado"], "90000.00")
+        self.assertEqual(response.data["porcentaje_utilizado"], "60.00")
+
+    def test_no_cuenta_gastos_de_categorias_sin_presupuesto(self):
+        Presupuesto.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, mes=10, anio=2026,
+            monto_limite=Decimal("100000.00"),
+        )
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, monto=Decimal("50000.00"),
+            fecha="2026-10-05",
+        )
+        # Entretenimiento no tiene presupuesto en el período: no debe sumar.
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_entretenimiento, monto=Decimal("20000.00"),
+            fecha="2026-10-06",
+        )
+
+        response = self.client.get(PRESUPUESTOS_RESUMEN_URL, {"mes": 10, "anio": 2026})
+
+        self.assertEqual(response.data["gasto_real_presupuestado"], "50000.00")
+
+    def test_separado_del_gasto_general_del_resumen(self):
+        Presupuesto.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, mes=10, anio=2026,
+            monto_limite=Decimal("100000.00"),
+        )
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, monto=Decimal("50000.00"),
+            fecha="2026-10-05",
+        )
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_entretenimiento, monto=Decimal("20000.00"),
+            fecha="2026-10-06",
+        )
+
+        resumen = self.client.get(RESUMEN_URL, {"mes": 10, "anio": 2026})
+        presupuestos_resumen = self.client.get(PRESUPUESTOS_RESUMEN_URL, {"mes": 10, "anio": 2026})
+
+        self.assertEqual(resumen.data["gastos"], "70000.00")
+        self.assertEqual(presupuestos_resumen.data["gasto_real_presupuestado"], "50000.00")
+
+    def test_sin_presupuestos_devuelve_ceros(self):
+        response = self.client.get(PRESUPUESTOS_RESUMEN_URL, {"mes": 10, "anio": 2026})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["presupuesto_total"], "0.00")
+        self.assertEqual(response.data["gasto_real_presupuestado"], "0.00")
+        self.assertEqual(response.data["porcentaje_utilizado"], "0.00")
+
+    def test_parametros_invalidos_devuelve_400(self):
+        response = self.client.get(PRESUPUESTOS_RESUMEN_URL, {"mes": 13, "anio": 2026})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

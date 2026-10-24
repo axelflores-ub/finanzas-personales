@@ -6,6 +6,7 @@ from rest_framework.response import Response
 
 from apps.categorias.models import Categoria
 from apps.movimientos.models import Movimiento
+from apps.presupuestos.models import Presupuesto
 
 from .validators import parse_periodo
 
@@ -89,5 +90,46 @@ def gastos_por_categoria(request):
             "anio": anio,
             "total_gastos": str(total_gastos.quantize(DOS_DECIMALES)),
             "categorias": categorias,
+        }
+    )
+
+
+@api_view(["GET"])
+def presupuestos_resumen(request):
+    """Presupuesto total, gasto real presupuestado y % utilizado del período.
+
+    Contrato JSON documentado en README.md (seccion Dashboard). Separado de
+    `resumen`: acá "gasto_real" solo suma categorías con presupuesto en el
+    período (no el gasto general), y cada categoría presupuestada aporta una
+    sola vez porque el modelo Presupuesto es único por (usuario, categoria,
+    mes, anio).
+    """
+    mes, anio = parse_periodo(request.query_params)
+
+    presupuestos = Presupuesto.objects.filter(usuario=request.user, mes=mes, anio=anio)
+    presupuesto_total = presupuestos.aggregate(total=Sum("monto_limite"))["total"] or CERO
+
+    categoria_ids = presupuestos.values_list("categoria_id", flat=True)
+    gasto_real_presupuestado = (
+        Movimiento.objects.filter(
+            usuario=request.user,
+            categoria_id__in=categoria_ids,
+            fecha__year=anio,
+            fecha__month=mes,
+        ).aggregate(total=Sum("monto"))["total"]
+        or CERO
+    )
+
+    porcentaje = (
+        (gasto_real_presupuestado / presupuesto_total * 100) if presupuesto_total > 0 else CERO
+    )
+
+    return Response(
+        {
+            "mes": mes,
+            "anio": anio,
+            "presupuesto_total": str(presupuesto_total.quantize(DOS_DECIMALES)),
+            "gasto_real_presupuestado": str(gasto_real_presupuestado.quantize(DOS_DECIMALES)),
+            "porcentaje_utilizado": str(porcentaje.quantize(DOS_DECIMALES)),
         }
     )

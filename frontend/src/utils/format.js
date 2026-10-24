@@ -1,3 +1,25 @@
+export const MESES = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+]
+
+export function aniosDisponibles() {
+  const actual = new Date().getFullYear()
+  const anios = []
+  for (let a = actual - 3; a <= actual + 1; a++) anios.push(a)
+  return anios
+}
+
 const currencyFormatter = new Intl.NumberFormat('es-AR', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
@@ -24,4 +46,12 @@ export function fechaHoy() {
   const mes = String(hoy.getMonth() + 1).padStart(2, '0')
   const dia = String(hoy.getDate()).padStart(2, '0')
   return `${anio}-${mes}-${dia}`
+}
+
+// Umbrales de uso de presupuesto: <80% normal, 80-99% advertencia, >=100% límite alcanzado/superado.
+export function claseUtilizacion(porcentaje) {
+  const valor = typeof porcentaje === 'string' ? Number(porcentaje) : porcentaje
+  if (valor >= 100) return 'danger'
+  if (valor >= 80) return 'warning'
+  return 'success'
 }

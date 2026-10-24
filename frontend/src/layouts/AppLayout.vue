@@ -30,6 +30,9 @@ function handleLogout() {
         <router-link class="nav-link" active-class="active" :to="{ name: 'movimientos' }">
           Movimientos
         </router-link>
+        <router-link class="nav-link" active-class="active" :to="{ name: 'presupuestos' }">
+          Presupuestos
+        </router-link>
       </nav>
 
       <div class="sidebar-user">

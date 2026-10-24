@@ -176,6 +176,47 @@ PostgreSQL
   del router (`/` y el fallback de `LoginView` sin `redirect` en la query)
   apunta a `{ name: 'dashboard' }` en vez de `categorias`.
 
+## API y frontend de Presupuestos (Etapa 5)
+
+- El modelo `Presupuesto` ya existía desde la Etapa 1 — esta etapa solo
+  agrega `serializers.py`, `views.py` y `urls.py` encima. Sin migraciones
+  nuevas.
+- **`gasto_real`, `porcentaje_utilizado` y `restante` son
+  `SerializerMethodField`, calculados en cada serialización** con una query
+  `Movimiento.objects.filter(...).aggregate(Sum("monto"))` (Decimal, nunca
+  `float`), no se guardan en el modelo. Esto es justamente lo que hace que
+  "se actualicen automáticamente cuando se crean, editan o eliminan
+  movimientos": no hay nada que invalidar ni recalcular con señales, el
+  valor siempre es fresco porque nunca se cachea en la base. El resultado sí
+  se cachea por-instancia dentro del propio `PresupuestoSerializer`
+  (`obj._gasto_real_cache`) para que los 3 campos de una misma fila no
+  disparen 3 queries idénticas.
+- Mismo patrón de validación que `Categoria`/`Movimiento`: `categoria` no es
+  restringible por queryset, se valida explícitamente en
+  `PresupuestoSerializer.validate()` (pertenencia al usuario, tipo `GASTO`,
+  unicidad por `usuario`+`categoria`+`mes`+`anio` excluyendo la instancia
+  actual en updates) para poder dar un mensaje de error claro por campo.
+- `PresupuestoViewSet.get_queryset()` acepta `?mes=&anio=` **opcionales**
+  (a diferencia del dashboard, acá no son obligatorios: sin filtros, lista
+  todos los presupuestos del usuario en cualquier período).
+- **`apps/dashboard/presupuestos_resumen`** es un endpoint nuevo, separado
+  de `resumen`: suma `monto_limite` de los presupuestos del período y el
+  gasto real **solo** de esas categorías (`categoria_id__in=...`), nunca el
+  gasto general. No hay riesgo de contar un gasto dos veces porque
+  `Presupuesto` es único por categoría+período, así que `categoria_ids` no
+  tiene duplicados.
+- **Frontend — umbrales de color compartidos:** `claseUtilizacion()` en
+  `utils/format.js` centraliza los 3 estados (`<80%` verde, `80-99%`
+  amarillo, `≥100%` rojo) para que el mini-resumen del Dashboard y la vista
+  de Presupuestos usen exactamente el mismo criterio.
+- **Frontend — "Excedido en" en vez de restante negativo:** `PresupuestoCard`
+  muestra `Math.abs(restante)` con la etiqueta "Excedido en" cuando es
+  negativo, en vez de mostrar directamente `-$5.000,00` (menos confuso para
+  el usuario).
+- `MESES` y `aniosDisponibles()` se movieron de `DashboardView.vue` a
+  `utils/format.js` en esta etapa para que `PresupuestoFormModal` y
+  `PresupuestosView` los reusaran sin duplicar el array.
+
 ## Reglas de negocio vigentes
 
 - Un usuario solo puede ver/editar/eliminar sus propios recursos.
@@ -197,9 +238,10 @@ PostgreSQL
   pasar a la siguiente.
 - No se avanza a la siguiente etapa sin confirmación explícita del alumno.
 - **MVP (Iteración 1):** login, categorías, CRUD de movimientos, dashboard con
-  ingresos/gastos/balance y gráfico de gastos por categoría.
-- **Iteración 2:** presupuestos mensuales con % utilizado, gráfico de evolución
-  mensual.
+  ingresos/gastos/balance y gráfico de gastos por categoría. ✅ completo
+  (Etapas 0-4).
+- **Iteración 2:** presupuestos mensuales con % utilizado ✅ (Etapa 5),
+  gráfico de evolución mensual pendiente (Etapa 6).
 - Se evita agregar funcionalidades o dependencias no pedidas en el alcance
   aprobado.
 
