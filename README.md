@@ -193,6 +193,21 @@ presupuesto en el período (no el gasto general de `resumen.gastos`).
 }
 ```
 
+**`GET /api/dashboard/evolucion-mensual/?anio=2026`** — siempre devuelve los
+12 meses del año (1 a 12), con `"0.00"` en los que no tienen movimientos.
+
+```json
+{
+  "anio": 2026,
+  "meses": [
+    { "mes": 1, "ingresos": "0.00", "gastos": "0.00", "balance": "0.00" },
+    { "mes": 2, "ingresos": "0.00", "gastos": "0.00", "balance": "0.00" },
+    { "mes": 10, "ingresos": "150000.00", "gastos": "13000.75", "balance": "136999.25" },
+    { "mes": 12, "ingresos": "0.00", "gastos": "0.00", "balance": "0.00" }
+  ]
+}
+```
+
 ### Presupuestos
 
 CRUD completo sobre el modelo `Presupuesto` ya existente (Etapa 1), scopeado
@@ -253,10 +268,11 @@ npm run dev
 
 Abrir `http://localhost:5173`. Te va a pedir login (usá el usuario de prueba
 sembrado con `seed_test_user`); después de iniciar sesión vas a ver el
-**Dashboard** (resumen del mes actual + gráfico de gastos por categoría +
-mini-resumen de presupuestos). Desde el menú lateral también se accede a
-**Categorías**, **Movimientos** y **Presupuestos** (límites de gasto por
-categoría, con barra de progreso: verde <80%, amarillo 80-99%, rojo ≥100%).
+**Dashboard** (resumen del mes actual, gráfico de gastos por categoría,
+gráfico de evolución mensual ingresos vs. gastos del año, y mini-resumen de
+presupuestos). Desde el menú lateral también se accede a **Categorías**,
+**Movimientos** y **Presupuestos** (límites de gasto por categoría, con
+barra de progreso: verde <80%, amarillo 80-99%, rojo ≥100%).
 
 ### Sesión: qué se guarda y qué limitación tiene
 
@@ -287,7 +303,7 @@ negocio en [CLAUDE.md](CLAUDE.md).
 - [x] Etapa 3 — CRUD de movimientos financieros
 - [x] Etapa 4 — Dashboard financiero MVP (resumen + gráfico por categoría)
 - [x] Etapa 5 — Presupuestos mensuales
-- [ ] Etapa 6 — Evolución mensual (iteración 2)
+- [x] Etapa 6 — Evolución mensual de ingresos y gastos
 - [ ] Etapa 7 — Cierre y documentación final
 
 ## Uso de inteligencia artificial

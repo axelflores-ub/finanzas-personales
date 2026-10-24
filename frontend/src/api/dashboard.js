@@ -11,3 +11,7 @@ export function getGastosPorCategoria(mes, anio) {
 export function getPresupuestosResumen(mes, anio) {
   return apiClient.get('/dashboard/presupuestos-resumen/', { params: { mes, anio } })
 }
+
+export function getEvolucionMensual(anio) {
+  return apiClient.get('/dashboard/evolucion-mensual/', { params: { anio } })
+}

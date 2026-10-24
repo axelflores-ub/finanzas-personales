@@ -217,6 +217,41 @@ PostgreSQL
   `utils/format.js` en esta etapa para que `PresupuestoFormModal` y
   `PresupuestosView` los reusaran sin duplicar el array.
 
+## API y frontend de Evolución mensual (Etapa 6)
+
+- `apps/dashboard/evolucion_mensual` agrupa con
+  `.values("fecha__month", "categoria__tipo").annotate(total=Sum("monto"))`
+  sobre `Movimiento` filtrado por usuario y año — una sola query, sin
+  N+1 por mes. El resultado se vuelca a dos diccionarios (`ingresos_por_mes`,
+  `gastos_por_mes`) pre-poblados con `Decimal("0.00")` para los 12 meses, así
+  que un mes sin movimientos no requiere lógica especial: ya está en cero.
+- `validators.py` se refactorizó: `_validar_anio()` es el helper compartido
+  entre `parse_periodo` (mes + año, usado por `resumen` /
+  `gastos_por_categoria` / `presupuestos_resumen`) y el nuevo `parse_anio`
+  (solo año, usado acá) — mismo criterio de validación sin duplicar código.
+- **Frontend — segundo gráfico, mismo patrón que la dona:** `DashboardView`
+  ahora maneja dos instancias de Chart.js (`chartInstance` para la dona,
+  `evolucionChartInstance` para las barras agrupadas), cada una con su propio
+  par destruir/crear. `cargarDashboard()` dispara los 4 endpoints del
+  dashboard en paralelo (`Promise.all`) y después resuelve los dos gráficos
+  en secuencia. El gráfico de evolución técnicamente solo depende de `anio`
+  (no de `mes`), pero se recarga con el mismo handler unificado por
+  simplicidad — el costo de una llamada HTTP de más al cambiar el mes es
+  insignificante comparado con mantener dos flujos de carga separados.
+- **Frontend — Chart.js: se agregaron los registrables de barras**
+  (`BarController`, `BarElement`, `CategoryScale`, `LinearScale`) a los que
+  ya estaban registrados para la dona (`ArcElement`, `DoughnutController`).
+  Mismo criterio de la Etapa 4: solo se registra lo que se usa, sin importar
+  `chart.js/auto`.
+- `MESES_CORTOS` (abreviaturas de 3 letras) se agregó a `utils/format.js`
+  para el eje X del gráfico de barras — Chart.js además recorta
+  automáticamente las etiquetas visibles en pantallas angostas (se ve en el
+  QA mobile: se muestran Ene/Mar/May/Jul/Sep/Nov salteando de a uno).
+- El eje Y del gráfico de barras formatea los ticks a mano
+  (`"$ " + value.toLocaleString('es-AR')`, sin decimales) en vez de
+  reusar `formatMonto` tal cual — mostrar centavos en cada línea de grilla
+  es ruido visual innecesario; los tooltips sí usan `formatMonto` completo.
+
 ## Reglas de negocio vigentes
 
 - Un usuario solo puede ver/editar/eliminar sus propios recursos.
@@ -241,7 +276,7 @@ PostgreSQL
   ingresos/gastos/balance y gráfico de gastos por categoría. ✅ completo
   (Etapas 0-4).
 - **Iteración 2:** presupuestos mensuales con % utilizado ✅ (Etapa 5),
-  gráfico de evolución mensual pendiente (Etapa 6).
+  gráfico de evolución mensual ✅ (Etapa 6). ✅ completa.
 - Se evita agregar funcionalidades o dependencias no pedidas en el alcance
   aprobado.
 

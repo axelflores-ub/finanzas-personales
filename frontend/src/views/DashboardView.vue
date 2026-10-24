@@ -1,11 +1,35 @@
 <script setup>
-import { ArcElement, Chart, DoughnutController, Legend, Tooltip } from 'chart.js'
+import {
+  ArcElement,
+  BarController,
+  BarElement,
+  CategoryScale,
+  Chart,
+  DoughnutController,
+  Legend,
+  LinearScale,
+  Tooltip,
+} from 'chart.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
-import { getGastosPorCategoria, getPresupuestosResumen, getResumen } from '../api/dashboard'
-import { MESES, aniosDisponibles, claseUtilizacion, formatMonto } from '../utils/format'
+import {
+  getEvolucionMensual,
+  getGastosPorCategoria,
+  getPresupuestosResumen,
+  getResumen,
+} from '../api/dashboard'
+import { MESES, MESES_CORTOS, aniosDisponibles, claseUtilizacion, formatMonto } from '../utils/format'
 
-Chart.register(ArcElement, DoughnutController, Tooltip, Legend)
+Chart.register(
+  ArcElement,
+  DoughnutController,
+  BarController,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+)
 
 const PALETA = [
   '#fca311',
@@ -28,6 +52,11 @@ const error = ref('')
 const resumen = ref(null)
 const gastosPorCategoria = ref([])
 const presupuestosResumen = ref(null)
+const evolucionMensual = ref([])
+
+const tieneEvolucion = computed(() =>
+  evolucionMensual.value.some((m) => Number(m.ingresos) > 0 || Number(m.gastos) > 0),
+)
 
 const balanceClass = computed(() => {
   const balance = Number(resumen.value?.balance ?? 0)
@@ -37,23 +66,29 @@ const balanceClass = computed(() => {
 const canvasRef = ref(null)
 let chartInstance = null
 
+const evolucionCanvasRef = ref(null)
+let evolucionChartInstance = null
+
 async function cargarDashboard() {
   loading.value = true
   error.value = ''
   try {
-    const [resumenRes, gastosRes, presupuestosRes] = await Promise.all([
+    const [resumenRes, gastosRes, presupuestosRes, evolucionRes] = await Promise.all([
       getResumen(mes.value, anio.value),
       getGastosPorCategoria(mes.value, anio.value),
       getPresupuestosResumen(mes.value, anio.value),
+      getEvolucionMensual(anio.value),
     ])
     resumen.value = resumenRes.data
     gastosPorCategoria.value = gastosRes.data.categorias
     presupuestosResumen.value = presupuestosRes.data
+    evolucionMensual.value = evolucionRes.data.meses
   } catch {
     error.value = 'No se pudo cargar el dashboard. Reintentá más tarde.'
     resumen.value = null
     gastosPorCategoria.value = []
     presupuestosResumen.value = null
+    evolucionMensual.value = []
   } finally {
     loading.value = false
   }
@@ -62,6 +97,12 @@ async function cargarDashboard() {
   if (gastosPorCategoria.value.length > 0) {
     await nextTick()
     crearChart()
+  }
+
+  destruirEvolucionChart()
+  if (tieneEvolucion.value) {
+    await nextTick()
+    crearEvolucionChart()
   }
 }
 
@@ -104,8 +145,57 @@ function crearChart() {
   })
 }
 
+function destruirEvolucionChart() {
+  if (evolucionChartInstance) {
+    evolucionChartInstance.destroy()
+    evolucionChartInstance = null
+  }
+}
+
+function crearEvolucionChart() {
+  if (!evolucionCanvasRef.value) return
+
+  const datos = evolucionMensual.value
+  const ingresos = datos.map((m) => Number(m.ingresos))
+  const gastos = datos.map((m) => Number(m.gastos))
+
+  evolucionChartInstance = new Chart(evolucionCanvasRef.value, {
+    type: 'bar',
+    data: {
+      labels: MESES_CORTOS,
+      datasets: [
+        { label: 'Ingresos', data: ingresos, backgroundColor: '#198754' },
+        { label: 'Gastos', data: gastos, backgroundColor: '#dc3545' },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value) => `$ ${Number(value).toLocaleString('es-AR')}`,
+          },
+        },
+      },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: (context) => `${context.dataset.label}: ${formatMonto(context.parsed.y)}`,
+          },
+        },
+      },
+    },
+  })
+}
+
 onMounted(cargarDashboard)
-onBeforeUnmount(destruirChart)
+onBeforeUnmount(() => {
+  destruirChart()
+  destruirEvolucionChart()
+})
 </script>
 
 <template>
@@ -177,15 +267,34 @@ onBeforeUnmount(destruirChart)
         </div>
       </div>
 
-      <div class="card shadow-sm border-0">
-        <div class="card-body">
-          <h2 class="h5 mb-3">Gastos por categoría</h2>
+      <div class="row g-3">
+        <div class="col-12 col-lg-5">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+              <h2 class="h5 mb-3">Gastos por categoría</h2>
 
-          <div v-if="gastosPorCategoria.length === 0" class="text-center text-muted py-5">
-            No hay gastos registrados en este período.
+              <div v-if="gastosPorCategoria.length === 0" class="text-center text-muted py-5">
+                No hay gastos registrados en este período.
+              </div>
+              <div v-else class="chart-wrapper">
+                <canvas ref="canvasRef"></canvas>
+              </div>
+            </div>
           </div>
-          <div v-else class="chart-wrapper">
-            <canvas ref="canvasRef"></canvas>
+        </div>
+
+        <div class="col-12 col-lg-7">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+              <h2 class="h5 mb-3">Evolución mensual · {{ anio }}</h2>
+
+              <div v-if="!tieneEvolucion" class="text-center text-muted py-5">
+                No hay movimientos registrados en {{ anio }}.
+              </div>
+              <div v-else class="chart-wrapper">
+                <canvas ref="evolucionCanvasRef"></canvas>
+              </div>
+            </div>
           </div>
         </div>
       </div>

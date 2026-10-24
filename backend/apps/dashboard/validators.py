@@ -6,6 +6,20 @@ ANIO_MINIMO = 2000
 ANIO_MAXIMO = 2100
 
 
+def _validar_anio(anio_raw):
+    if not anio_raw:
+        raise ValidationError({"anio": "El parámetro anio es obligatorio."})
+    try:
+        anio = int(anio_raw)
+    except ValueError:
+        raise ValidationError({"anio": "anio debe ser un número entero."})
+    if not (ANIO_MINIMO <= anio <= ANIO_MAXIMO):
+        raise ValidationError(
+            {"anio": f"anio debe estar entre {ANIO_MINIMO} y {ANIO_MAXIMO}."}
+        )
+    return anio
+
+
 def parse_periodo(params):
     """Valida y devuelve (mes, anio) a partir de los query params.
 
@@ -28,16 +42,14 @@ def parse_periodo(params):
     except ValueError:
         raise ValidationError({"mes": "mes debe ser un número entero."})
 
-    try:
-        anio = int(anio_raw)
-    except ValueError:
-        raise ValidationError({"anio": "anio debe ser un número entero."})
-
     if not (MES_MINIMO <= mes <= MES_MAXIMO):
         raise ValidationError({"mes": f"mes debe estar entre {MES_MINIMO} y {MES_MAXIMO}."})
-    if not (ANIO_MINIMO <= anio <= ANIO_MAXIMO):
-        raise ValidationError(
-            {"anio": f"anio debe estar entre {ANIO_MINIMO} y {ANIO_MAXIMO}."}
-        )
+
+    anio = _validar_anio(anio_raw)
 
     return mes, anio
+
+
+def parse_anio(params):
+    """Valida y devuelve `anio` a partir de los query params (sin mes)."""
+    return _validar_anio(params.get("anio"))

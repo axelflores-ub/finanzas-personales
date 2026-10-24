@@ -11,9 +11,14 @@ from apps.presupuestos.models import Presupuesto
 RESUMEN_URL = "/api/dashboard/resumen/"
 GASTOS_POR_CATEGORIA_URL = "/api/dashboard/gastos-por-categoria/"
 PRESUPUESTOS_RESUMEN_URL = "/api/dashboard/presupuestos-resumen/"
+EVOLUCION_MENSUAL_URL = "/api/dashboard/evolucion-mensual/"
 
 
 class DashboardApiAuthTests(APITestCase):
+    def test_evolucion_mensual_sin_autenticacion_devuelve_401(self):
+        response = self.client.get(EVOLUCION_MENSUAL_URL, {"anio": 2026})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_presupuestos_resumen_sin_autenticacion_devuelve_401(self):
         response = self.client.get(PRESUPUESTOS_RESUMEN_URL, {"mes": 10, "anio": 2026})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -325,3 +330,137 @@ class DashboardPresupuestosResumenTests(APITestCase):
     def test_parametros_invalidos_devuelve_400(self):
         response = self.client.get(PRESUPUESTOS_RESUMEN_URL, {"mes": 13, "anio": 2026})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class DashboardEvolucionMensualTests(APITestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username="ana", password="x")
+        self.otro_usuario = get_user_model().objects.create_user(username="beto", password="x")
+        self.client.force_authenticate(user=self.user)
+
+        self.cat_sueldo = Categoria.objects.create(
+            usuario=self.user, nombre="Sueldo", tipo=Categoria.Tipo.INGRESO
+        )
+        self.cat_alimentacion = Categoria.objects.create(
+            usuario=self.user, nombre="Alimentación", tipo=Categoria.Tipo.GASTO
+        )
+
+    def _mes(self, response, mes):
+        return next(item for item in response.data["meses"] if item["mes"] == mes)
+
+    def test_devuelve_doce_meses(self):
+        response = self.client.get(EVOLUCION_MENSUAL_URL, {"anio": 2026})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["meses"]), 12)
+        self.assertEqual([m["mes"] for m in response.data["meses"]], list(range(1, 13)))
+
+    # Agrupación correcta por mes. / Ingresos y gastos separados.
+    def test_agrupacion_por_mes_ingresos_y_gastos_separados(self):
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_sueldo, monto=Decimal("150000.00"),
+            fecha="2026-01-05",
+        )
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, monto=Decimal("30000.00"),
+            fecha="2026-01-10",
+        )
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_sueldo, monto=Decimal("160000.00"),
+            fecha="2026-02-05",
+        )
+
+        response = self.client.get(EVOLUCION_MENSUAL_URL, {"anio": 2026})
+
+        enero = self._mes(response, 1)
+        febrero = self._mes(response, 2)
+        self.assertEqual(enero["ingresos"], "150000.00")
+        self.assertEqual(enero["gastos"], "30000.00")
+        self.assertEqual(febrero["ingresos"], "160000.00")
+        self.assertEqual(febrero["gastos"], "0.00")
+
+    # Balance correcto.
+    def test_balance_por_mes(self):
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_sueldo, monto=Decimal("150000.00"),
+            fecha="2026-03-05",
+        )
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, monto=Decimal("30000.00"),
+            fecha="2026-03-10",
+        )
+
+        response = self.client.get(EVOLUCION_MENSUAL_URL, {"anio": 2026})
+
+        marzo = self._mes(response, 3)
+        self.assertEqual(marzo["balance"], "120000.00")
+
+    # Meses sin movimientos.
+    def test_meses_sin_movimientos_quedan_en_cero(self):
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_sueldo, monto=Decimal("1000.00"),
+            fecha="2026-06-05",
+        )
+
+        response = self.client.get(EVOLUCION_MENSUAL_URL, {"anio": 2026})
+
+        for mes_data in response.data["meses"]:
+            if mes_data["mes"] != 6:
+                self.assertEqual(mes_data["ingresos"], "0.00")
+                self.assertEqual(mes_data["gastos"], "0.00")
+                self.assertEqual(mes_data["balance"], "0.00")
+
+    def test_no_incluye_movimientos_de_otro_anio(self):
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_sueldo, monto=Decimal("1000.00"),
+            fecha="2025-06-05",
+        )
+
+        response = self.client.get(EVOLUCION_MENSUAL_URL, {"anio": 2026})
+
+        junio = self._mes(response, 6)
+        self.assertEqual(junio["ingresos"], "0.00")
+
+    # Aislamiento entre usuarios.
+    def test_no_incluye_movimientos_de_otro_usuario(self):
+        categoria_ajena = Categoria.objects.create(
+            usuario=self.otro_usuario, nombre="Sueldo", tipo=Categoria.Tipo.INGRESO
+        )
+        Movimiento.objects.create(
+            usuario=self.otro_usuario, categoria=categoria_ajena, monto=Decimal("999999.00"),
+            fecha="2026-04-05",
+        )
+
+        response = self.client.get(EVOLUCION_MENSUAL_URL, {"anio": 2026})
+
+        abril = self._mes(response, 4)
+        self.assertEqual(abril["ingresos"], "0.00")
+
+    # Año inválido.
+    def test_anio_faltante_devuelve_400(self):
+        response = self.client.get(EVOLUCION_MENSUAL_URL)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("anio", response.data)
+
+    def test_anio_no_numerico_devuelve_400(self):
+        response = self.client.get(EVOLUCION_MENSUAL_URL, {"anio": "dosmilveintiseis"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_anio_fuera_de_rango_devuelve_400(self):
+        response = self.client.get(EVOLUCION_MENSUAL_URL, {"anio": 1800})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # Precisión decimal.
+    def test_precision_decimal(self):
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_sueldo, monto=Decimal("1000.10"),
+            fecha="2026-07-05",
+        )
+        Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_sueldo, monto=Decimal("1000.20"),
+            fecha="2026-07-06",
+        )
+
+        response = self.client.get(EVOLUCION_MENSUAL_URL, {"anio": 2026})
+
+        julio = self._mes(response, 7)
+        self.assertEqual(julio["ingresos"], "2000.30")

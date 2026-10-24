@@ -14,4 +14,9 @@ urlpatterns = [
         views.presupuestos_resumen,
         name="dashboard-presupuestos-resumen",
     ),
+    path(
+        "dashboard/evolucion-mensual/",
+        views.evolucion_mensual,
+        name="dashboard-evolucion-mensual",
+    ),
 ]

@@ -13,6 +13,8 @@ export const MESES = [
   'Diciembre',
 ]
 
+export const MESES_CORTOS = MESES.map((mes) => mes.slice(0, 3))
+
 export function aniosDisponibles() {
   const actual = new Date().getFullYear()
   const anios = []

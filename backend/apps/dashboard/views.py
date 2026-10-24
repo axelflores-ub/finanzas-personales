@@ -8,7 +8,7 @@ from apps.categorias.models import Categoria
 from apps.movimientos.models import Movimiento
 from apps.presupuestos.models import Presupuesto
 
-from .validators import parse_periodo
+from .validators import parse_anio, parse_periodo
 
 CERO = Decimal("0.00")
 DOS_DECIMALES = Decimal("0.01")
@@ -133,3 +133,45 @@ def presupuestos_resumen(request):
             "porcentaje_utilizado": str(porcentaje.quantize(DOS_DECIMALES)),
         }
     )
+
+
+@api_view(["GET"])
+def evolucion_mensual(request):
+    """Ingresos, gastos y balance mes a mes (1-12) del usuario para un año.
+
+    Contrato JSON documentado en README.md (seccion Dashboard). Siempre
+    devuelve los 12 meses, con ceros en los que no tienen movimientos.
+    """
+    anio = parse_anio(request.query_params)
+
+    agregados = (
+        Movimiento.objects.filter(usuario=request.user, fecha__year=anio)
+        .values("fecha__month", "categoria__tipo")
+        .annotate(total=Sum("monto"))
+    )
+
+    ingresos_por_mes = {mes: CERO for mes in range(1, 13)}
+    gastos_por_mes = {mes: CERO for mes in range(1, 13)}
+    for item in agregados:
+        destino = (
+            ingresos_por_mes
+            if item["categoria__tipo"] == Categoria.Tipo.INGRESO
+            else gastos_por_mes
+        )
+        destino[item["fecha__month"]] = item["total"]
+
+    meses = []
+    for mes in range(1, 13):
+        ingresos = ingresos_por_mes[mes]
+        gastos = gastos_por_mes[mes]
+        balance = ingresos - gastos
+        meses.append(
+            {
+                "mes": mes,
+                "ingresos": str(ingresos.quantize(DOS_DECIMALES)),
+                "gastos": str(gastos.quantize(DOS_DECIMALES)),
+                "balance": str(balance.quantize(DOS_DECIMALES)),
+            }
+        )
+
+    return Response({"anio": anio, "meses": meses})
