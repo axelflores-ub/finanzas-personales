@@ -1,6 +1,7 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
+import { useModalA11y } from '../../composables/useModalA11y'
 import { MESES, aniosDisponibles } from '../../utils/format'
 
 const props = defineProps({
@@ -19,6 +20,13 @@ const categoriaId = ref('')
 const mes = ref(props.mesPorDefecto)
 const anio = ref(props.anioPorDefecto)
 const montoLimite = ref('')
+
+const modalRef = ref(null)
+useModalA11y(
+  computed(() => props.show),
+  modalRef,
+  () => emit('cancel'),
+)
 
 watch(
   () => props.show,
@@ -51,7 +59,7 @@ function handleSubmit() {
 
 <template>
   <div v-if="show" class="modal-backdrop-custom" @click.self="emit('cancel')">
-    <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div ref="modalRef" class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <form @submit.prevent="handleSubmit" novalidate>

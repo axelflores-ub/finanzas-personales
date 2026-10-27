@@ -69,39 +69,57 @@ let chartInstance = null
 const evolucionCanvasRef = ref(null)
 let evolucionChartInstance = null
 
+// Id incremental para descartar respuestas obsoletas: si el usuario cambia
+// mes/año antes de que vuelva el pedido anterior, esa respuesta ya no
+// corresponde al período vigente y no debe pisar el estado ni redibujar los
+// gráficos. Cada llamada a cargarDashboard() toma el valor actual; al volver
+// de cada `await`, si dashboardRequestId ya avanzó, esta corrida es vieja y
+// se aborta sin tocar nada.
+let dashboardRequestId = 0
+
 async function cargarDashboard() {
+  const requestId = ++dashboardRequestId
   loading.value = true
   error.value = ''
+
+  let resumenRes, gastosRes, presupuestosRes, evolucionRes
   try {
-    const [resumenRes, gastosRes, presupuestosRes, evolucionRes] = await Promise.all([
+    ;[resumenRes, gastosRes, presupuestosRes, evolucionRes] = await Promise.all([
       getResumen(mes.value, anio.value),
       getGastosPorCategoria(mes.value, anio.value),
       getPresupuestosResumen(mes.value, anio.value),
       getEvolucionMensual(anio.value),
     ])
-    resumen.value = resumenRes.data
-    gastosPorCategoria.value = gastosRes.data.categorias
-    presupuestosResumen.value = presupuestosRes.data
-    evolucionMensual.value = evolucionRes.data.meses
   } catch {
+    if (requestId !== dashboardRequestId) return
     error.value = 'No se pudo cargar el dashboard. Reintentá más tarde.'
     resumen.value = null
     gastosPorCategoria.value = []
     presupuestosResumen.value = null
     evolucionMensual.value = []
-  } finally {
     loading.value = false
+    return
   }
+
+  if (requestId !== dashboardRequestId) return
+
+  resumen.value = resumenRes.data
+  gastosPorCategoria.value = gastosRes.data.categorias
+  presupuestosResumen.value = presupuestosRes.data
+  evolucionMensual.value = evolucionRes.data.meses
+  loading.value = false
 
   destruirChart()
   if (gastosPorCategoria.value.length > 0) {
     await nextTick()
+    if (requestId !== dashboardRequestId) return
     crearChart()
   }
 
   destruirEvolucionChart()
   if (tieneEvolucion.value) {
     await nextTick()
+    if (requestId !== dashboardRequestId) return
     crearEvolucionChart()
   }
 }

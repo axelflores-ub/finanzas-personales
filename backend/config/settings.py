@@ -33,7 +33,9 @@ if not SECRET_KEY:
         "backend/.env y completá los valores."
     )
 
-DEBUG = _env_bool("DJANGO_DEBUG", "True")
+# Seguro por defecto: si DJANGO_DEBUG no está definida, arranca en False.
+# Para desarrollo local, backend/.env fija DJANGO_DEBUG=True explícitamente.
+DEBUG = _env_bool("DJANGO_DEBUG", "False")
 
 ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 

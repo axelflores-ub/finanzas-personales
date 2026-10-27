@@ -53,17 +53,24 @@ async function cargarCategorias() {
   categorias.value = data
 }
 
+// Id incremental para descartar respuestas obsoletas ante cambios rápidos
+// de mes/año (mismo mecanismo que en DashboardView.vue).
+let presupuestosRequestId = 0
+
 async function cargarPresupuestos() {
+  const requestId = ++presupuestosRequestId
   loading.value = true
   loadError.value = ''
   try {
     const { data } = await listPresupuestos(mes.value, anio.value)
+    if (requestId !== presupuestosRequestId) return
     presupuestos.value = data
   } catch {
+    if (requestId !== presupuestosRequestId) return
     loadError.value = 'No se pudieron cargar los presupuestos. Reintentá más tarde.'
     presupuestos.value = []
   } finally {
-    loading.value = false
+    if (requestId === presupuestosRequestId) loading.value = false
   }
 }
 
@@ -156,12 +163,22 @@ function extractErrorMessage(error, fallback) {
         <p class="text-muted mb-0">Definí límites de gasto por categoría y seguí su uso.</p>
       </div>
       <div class="d-flex gap-2 align-items-center flex-wrap">
-        <select v-model.number="mes" class="form-select form-select-sm w-auto" @change="cargarPresupuestos">
+        <select
+          v-model.number="mes"
+          class="form-select form-select-sm w-auto"
+          aria-label="Mes"
+          @change="cargarPresupuestos"
+        >
           <option v-for="(nombre, index) in MESES" :key="nombre" :value="index + 1">
             {{ nombre }}
           </option>
         </select>
-        <select v-model.number="anio" class="form-select form-select-sm w-auto" @change="cargarPresupuestos">
+        <select
+          v-model.number="anio"
+          class="form-select form-select-sm w-auto"
+          aria-label="Año"
+          @change="cargarPresupuestos"
+        >
           <option v-for="a in aniosDisponibles()" :key="a" :value="a">{{ a }}</option>
         </select>
         <button type="button" class="btn btn-primary" @click="openCreateForm">

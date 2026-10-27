@@ -190,16 +190,27 @@ function extractErrorMessage(error, fallback) {
         </div>
         <div class="row g-2 align-items-end">
           <div class="col-6 col-md-2">
-            <label class="form-label small mb-1">Desde</label>
-            <input v-model="filtroFechaDesde" type="date" class="form-control form-control-sm" />
+            <label class="form-label small mb-1" for="filtro-fecha-desde">Desde</label>
+            <input
+              id="filtro-fecha-desde"
+              v-model="filtroFechaDesde"
+              type="date"
+              class="form-control form-control-sm"
+            />
           </div>
           <div class="col-6 col-md-2">
-            <label class="form-label small mb-1">Hasta</label>
-            <input v-model="filtroFechaHasta" type="date" class="form-control form-control-sm" />
+            <label class="form-label small mb-1" for="filtro-fecha-hasta">Hasta</label>
+            <input
+              id="filtro-fecha-hasta"
+              v-model="filtroFechaHasta"
+              type="date"
+              class="form-control form-control-sm"
+            />
           </div>
           <div class="col-6 col-md-2">
-            <label class="form-label small mb-1">Tipo</label>
+            <label class="form-label small mb-1" for="filtro-tipo">Tipo</label>
             <select
+              id="filtro-tipo"
               v-model="filtroTipo"
               class="form-select form-select-sm"
               @change="onFiltroTipoChange"
@@ -210,8 +221,8 @@ function extractErrorMessage(error, fallback) {
             </select>
           </div>
           <div class="col-6 col-md-3">
-            <label class="form-label small mb-1">Categoría</label>
-            <select v-model="filtroCategoria" class="form-select form-select-sm">
+            <label class="form-label small mb-1" for="filtro-categoria">Categoría</label>
+            <select id="filtro-categoria" v-model="filtroCategoria" class="form-select form-select-sm">
               <option value="">Todas</option>
               <option
                 v-for="categoria in categoriasFiltro"

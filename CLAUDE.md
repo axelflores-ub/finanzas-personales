@@ -252,6 +252,67 @@ PostgreSQL
   reusar `formatMonto` tal cual — mostrar centavos en cada línea de grilla
   es ruido visual innecesario; los tooltips sí usan `formatMonto` completo.
 
+## Correcciones de calidad y seguridad (Etapa 7A.1)
+
+Tras la auditoría de la Etapa 7A, se corrigieron los hallazgos confirmados
+(sin tocar JWT, arquitectura ni funcionalidades — eso quedó fuera de
+alcance a propósito):
+
+- **`DEBUG` seguro por defecto:** `config/settings.py` ahora usa
+  `_env_bool("DJANGO_DEBUG", "False")` — si falta la variable, arranca en
+  `False`. `backend/.env`/`.env.example` siguen fijando
+  `DJANGO_DEBUG=True` explícitamente para desarrollo, así que el entorno
+  local no cambió de comportamiento. Cubierto por
+  `apps/core/tests.py::SettingsSeguraPorDefectoTests`: dos tests unitarios
+  sobre `_env_bool` (el helper que de verdad calcula el valor — no se
+  recarga todo el módulo de settings dentro del test, sería mucho más
+  frágil) y un test "guarda de regresión" que lee el código fuente de
+  `settings.py` y falla si alguien vuelve a poner `"True"` como default.
+- **Condición de carrera en selectores de período:** `DashboardView.vue` y
+  `PresupuestosView.vue` ahora llevan un contador `requestId` que se
+  incrementa en cada llamada a `cargarDashboard()`/`cargarPresupuestos()`;
+  cada punto de la función que toca estado compartido (refs, gráficos)
+  chequea primero que su `requestId` siga siendo el vigente, si no, corta
+  sin tocar nada. Se probó disparando 4 combinaciones de mes/año seguidas
+  sin esperar cada respuesta — el estado final siempre quedó consistente
+  con el último período seleccionado. No se usó `AbortController` porque
+  hubiera requerido pasar un `signal` a través de todo `api/*.js`; el
+  contador de request logra lo mismo tocando solo las dos vistas.
+- **Accesibilidad de teclado en modales:** los 4 modales custom
+  (`ConfirmDialog`, `CategoriaFormModal`, `MovimientoFormModal`,
+  `PresupuestoFormModal`) ahora usan un composable nuevo,
+  `src/composables/useModalA11y.js` — no es una librería externa, es una
+  función de Vue plano — que da Escape-para-cerrar, foco inicial dentro
+  del modal al abrir, trampa de Tab/Shift+Tab, y restauración del foco al
+  elemento que lo abrió al cerrar. Se centralizó en un composable en vez
+  de un `BaseModal.vue` para no tocar el markup/CSS de cada modal (fuera
+  de alcance de esta etapa) — cada componente solo agrega 5 líneas de
+  `<script setup>` y un `ref="modalRef"` en su contenedor.
+  - Verificado con eventos de teclado reales (`KeyboardEvent` con
+    `key: 'Tab'`/`'Escape'`), no solo leyendo el código: Tab desde el
+    último campo vuelve al primero, Shift+Tab desde el primero vuelve al
+    último, Escape cierra y restaura el foco — confirmado en
+    `PresupuestoFormModal` y `CategoriaFormModal`.
+  - Nota de QA: un `.click()` disparado por JavaScript (como los que usa
+    este proyecto para probar la UI vía herramientas de automatización) no
+    mueve el foco del navegador de la misma forma que un click real — por
+    eso la restauración de foco "falló" en una primera prueba hasta
+    enfocar el botón a mano antes de abrir el modal. Es una particularidad
+    del entorno de pruebas, no un bug: con interacción real (mouse o
+    teclado) el navegador sí foca el botón al hacer click, y la
+    restauración funciona.
+- **Labels de filtros:** `MovimientosView.vue` (Desde/Hasta/Tipo/Categoría)
+  ahora usa `id`+`for` igual que los formularios modales;
+  `PresupuestosView.vue` (selects de mes/año) ahora usa `aria-label`, igual
+  que `DashboardView.vue`.
+- **Cobertura de tests para `PATCH` inválido:** se agregaron tests que
+  confirman que un `PATCH` con monto negativo, categoría ajena, límite de
+  presupuesto inválido o categoría de ingreso en un presupuesto son
+  rechazados con `400` **y que el registro en la base queda exactamente
+  igual que antes del intento** (`refresh_from_db()` + `assertEqual` contra
+  el valor original) — no alcanza con que el endpoint rechace la request,
+  hay que confirmar que no mutó nada a medias.
+
 ## Reglas de negocio vigentes
 
 - Un usuario solo puede ver/editar/eliminar sus propios recursos.

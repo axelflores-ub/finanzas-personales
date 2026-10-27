@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 
+import { useModalA11y } from '../../composables/useModalA11y'
 import { fechaHoy } from '../../utils/format'
 
 const props = defineProps({
@@ -18,6 +19,13 @@ const categoriaId = ref('')
 const monto = ref('')
 const fecha = ref('')
 const descripcion = ref('')
+
+const modalRef = ref(null)
+useModalA11y(
+  computed(() => props.show),
+  modalRef,
+  () => emit('cancel'),
+)
 
 const categoriasFiltradas = computed(() =>
   props.categorias.filter((categoria) => categoria.tipo === tipo.value),
@@ -72,7 +80,7 @@ function handleSubmit() {
 
 <template>
   <div v-if="show" class="modal-backdrop-custom" @click.self="emit('cancel')">
-    <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div ref="modalRef" class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <form @submit.prevent="handleSubmit" novalidate>

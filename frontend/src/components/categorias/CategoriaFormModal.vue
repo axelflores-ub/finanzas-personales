@@ -1,5 +1,7 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+
+import { useModalA11y } from '../../composables/useModalA11y'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -12,6 +14,13 @@ const emit = defineEmits(['submit', 'cancel'])
 
 const nombre = ref('')
 const tipo = ref('GASTO')
+
+const modalRef = ref(null)
+useModalA11y(
+  computed(() => props.show),
+  modalRef,
+  () => emit('cancel'),
+)
 
 watch(
   () => props.show,
@@ -31,7 +40,7 @@ function handleSubmit() {
 
 <template>
   <div v-if="show" class="modal-backdrop-custom" @click.self="emit('cancel')">
-    <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div ref="modalRef" class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <form @submit.prevent="handleSubmit" novalidate>

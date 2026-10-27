@@ -84,6 +84,39 @@ class PresupuestoApiTests(APITestCase):
         presupuesto.refresh_from_db()
         self.assertEqual(presupuesto.monto_limite, Decimal("2000.00"))
 
+    def test_patch_con_limite_invalido_rechazado_y_no_altera_el_dato(self):
+        presupuesto = Presupuesto.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, mes=10, anio=2026,
+            monto_limite=Decimal("1000.00"),
+        )
+        response = self.client.patch(detail_url(presupuesto.id), {"monto_limite": "0.00"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("monto_limite", response.data)
+        presupuesto.refresh_from_db()
+        self.assertEqual(presupuesto.monto_limite, Decimal("1000.00"))
+
+    def test_patch_con_limite_negativo_rechazado_y_no_altera_el_dato(self):
+        presupuesto = Presupuesto.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, mes=10, anio=2026,
+            monto_limite=Decimal("1000.00"),
+        )
+        response = self.client.patch(detail_url(presupuesto.id), {"monto_limite": "-250.00"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("monto_limite", response.data)
+        presupuesto.refresh_from_db()
+        self.assertEqual(presupuesto.monto_limite, Decimal("1000.00"))
+
+    def test_patch_con_categoria_de_ingreso_rechazado_y_no_altera_el_dato(self):
+        presupuesto = Presupuesto.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, mes=10, anio=2026,
+            monto_limite=Decimal("1000.00"),
+        )
+        response = self.client.patch(detail_url(presupuesto.id), {"categoria": self.cat_sueldo.id})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("categoria", response.data)
+        presupuesto.refresh_from_db()
+        self.assertEqual(presupuesto.categoria_id, self.cat_alimentacion.id)
+
     def test_eliminar_presupuesto(self):
         presupuesto = Presupuesto.objects.create(
             usuario=self.user, categoria=self.cat_alimentacion, mes=10, anio=2026,

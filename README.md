@@ -15,29 +15,126 @@ Bootstrap 5 · Axios · Chart.js
 
 - Python 3.11+
 - Node.js 20+ (LTS)
-- PostgreSQL 14+ (servidor corriendo y accesible)
+- PostgreSQL 14+
 - Git
 
-> Si tu máquina no tiene permisos de administrador, podés instalar Node.js con
-> [nvm](https://github.com/nvm-sh/nvm) y PostgreSQL con
-> [Miniforge/conda-forge](https://github.com/conda-forge/miniforge) — ninguno
-> de los dos requiere `sudo`. Ver el detalle de cómo se armó este entorno en
-> [CLAUDE.md](CLAUDE.md#entorno-de-desarrollo-local).
+Esta guía cubre dos escenarios:
+
+- **[A] Tenés una máquina "normal"**, con permisos de administrador y
+  PostgreSQL instalado (Homebrew, Postgres.app, el instalador oficial, o ya
+  corriendo como servicio).
+- **[B] No tenés permisos de administrador** (`sudo`) — el escenario real en
+  el que se desarrolló este proyecto: una Mac sin acceso admin, con Node.js
+  instalado vía [nvm](https://github.com/nvm-sh/nvm) y Python+PostgreSQL vía
+  [Miniforge/conda-forge](https://github.com/conda-forge/miniforge), ninguno
+  de los dos requiere `sudo`. Más contexto en
+  [CLAUDE.md](CLAUDE.md#entorno-de-desarrollo-local).
+
+Seguí la sección que te corresponda y después continuá en
+["Crear el rol y la base de datos"](#crear-el-rol-y-la-base-de-datos), que es
+igual para ambos casos.
+
+### [A] PostgreSQL ya instalado con permisos de administrador
+
+Confirmá que el servidor esté corriendo y que tengas el cliente `psql`:
+
+```bash
+psql --version
+pg_isready            # debe responder "accepting connections"
+```
+
+Si no tenés PostgreSQL instalado: `brew install postgresql@16 && brew services start postgresql@16`
+(Homebrew) o descargalo de [postgresql.org](https://www.postgresql.org/download/).
+Luego seguí directo a ["Crear el rol y la base de datos"](#crear-el-rol-y-la-base-de-datos).
+
+### [B] Sin permisos de administrador (Node vía nvm, Python+PostgreSQL vía Miniforge)
+
+```bash
+# 1. Node.js, sin sudo
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+# Si es la primera vez que instalás nvm, cerrá y reabrí la terminal (o seguí
+# las instrucciones que imprime el instalador) antes de continuar.
+nvm install --lts
+
+# 2. Python + PostgreSQL, sin sudo, vía Miniforge/conda-forge
+curl -L -o Miniforge3.sh \
+  "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-$(uname -m).sh"
+bash Miniforge3.sh -b -p "$HOME/miniforge3"
+"$HOME/miniforge3/bin/conda" create -n finanzas python=3.12 postgresql=16 -c conda-forge -y
+
+# 3. Activar el entorno en cada terminal nueva que uses para este proyecto
+source "$HOME/miniforge3/bin/activate" finanzas
+
+# 4. Inicializar y arrancar PostgreSQL como proceso de usuario (no como
+#    servicio del sistema, porque no hay permisos para registrar uno)
+initdb -D "$HOME/.local/share/postgres-finanzas" -U postgres -A trust -E UTF8
+mkdir -p "$HOME/.local/share/postgres-logs"
+pg_ctl -D "$HOME/.local/share/postgres-finanzas" \
+  -l "$HOME/.local/share/postgres-logs/postgres.log" \
+  -o "-p 5432 -k /tmp" start
+```
+
+`pg_ctl ... start` solo hace falta correrlo una vez por sesión/reinicio de la
+máquina — si ya corriste `initdb`, en la siguiente terminal alcanza con
+`source .../activate finanzas` y `pg_ctl -D ... start` (sin `initdb` de
+nuevo). Para pararlo: `pg_ctl -D "$HOME/.local/share/postgres-finanzas" stop`.
+
+### Crear el rol y la base de datos
+
+Con PostgreSQL corriendo (cualquiera de los dos casos), creá el rol y la
+base que va a usar la app. Reemplazá `elegí-una-contraseña-local` por una
+contraseña propia — **no uses una contraseña real/reusada, es solo para tu
+Postgres local**:
+
+```bash
+# Caso [A] (instalación normal, usuario de PostgreSQL con permisos para crear roles):
+psql postgres -c "CREATE ROLE finanzas_user WITH LOGIN PASSWORD 'elegí-una-contraseña-local';"
+psql postgres -c "CREATE DATABASE finanzas_db OWNER finanzas_user;"
+psql postgres -c "ALTER ROLE finanzas_user CREATEDB;"   # necesario para correr los tests
+
+# Caso [B] (Miniforge, servidor propio con el rol "postgres" de superusuario):
+psql -h localhost -p 5432 -U postgres -c "CREATE ROLE finanzas_user WITH LOGIN PASSWORD 'elegí-una-contraseña-local';"
+psql -h localhost -p 5432 -U postgres -c "CREATE DATABASE finanzas_db OWNER finanzas_user;"
+psql -h localhost -p 5432 -U postgres -c "ALTER ROLE finanzas_user CREATEDB;"
+```
+
+El `ALTER ROLE ... CREATEDB` es necesario porque `python manage.py test`
+crea y destruye una base de datos de test (`test_finanzas_db`) en cada
+corrida; sin ese permiso, la suite de tests falla al arrancar.
+
+Verificar que quedó accesible:
+
+```bash
+psql -h localhost -p 5432 -U finanzas_user -d finanzas_db -c "SELECT 1;"
+```
 
 ## Backend
 
 ```bash
 cd backend
-python -m venv .venv          # o el entorno conda/virtualenv que prefieras
-source .venv/bin/activate
+python -m venv .venv          # o `conda create -n finanzas python=3.12 ...` si usaste Miniforge arriba
+source .venv/bin/activate      # o `source "$HOME/miniforge3/bin/activate" finanzas`
 pip install -r requirements.txt
 
 cp .env.example .env
-# Completar .env con:
-# - DJANGO_SECRET_KEY (generar una propia, no reusar la de ejemplo)
-# - DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT de tu PostgreSQL local
+```
 
+Completá `backend/.env`:
+
+- `DJANGO_SECRET_KEY`: generá una propia, no reuses la del ejemplo —
+  `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`
+  (podés correrlo recién después de `pip install -r requirements.txt`).
+- `DB_NAME=finanzas_db`, `DB_USER=finanzas_user`, `DB_PASSWORD=` la que elegiste
+  arriba, `DB_HOST=localhost`, `DB_PORT=5432`.
+- `TEST_USER_USERNAME` / `TEST_USER_PASSWORD` / `TEST_USER_EMAIL`: el único
+  usuario de la app (no hay registro público) — elegí los valores que
+  quieras, no son credenciales reales de nadie.
+
+Migrar y crear el usuario inicial:
+
+```bash
 python manage.py migrate
+python manage.py seed_test_user
 python manage.py runserver 127.0.0.1:8000
 ```
 
@@ -48,25 +145,14 @@ curl http://127.0.0.1:8000/api/health/
 # {"status":"ok","database":"ok"}
 ```
 
-Si `database` no da `"ok"`, revisar que PostgreSQL esté corriendo y que las
-credenciales en `.env` sean correctas.
+Si `database` no da `"ok"`, revisar que PostgreSQL esté corriendo
+(`pg_isready`, o `pg_ctl -D ... status` en el caso [B]) y que las
+credenciales en `.env` coincidan con las del rol que creaste.
 
-### Usuario de prueba y autenticación (JWT)
+### Autenticación (JWT)
 
-No hay registro público de usuarios. Para desarrollo local se crea un único
-usuario de prueba a partir de variables de entorno (nunca se commitean
-credenciales):
-
-```bash
-# En backend/.env, completar:
-# TEST_USER_USERNAME=...
-# TEST_USER_PASSWORD=...
-# TEST_USER_EMAIL=...
-
-python manage.py seed_test_user
-```
-
-Con ese usuario podés pedir un token:
+No hay registro público de usuarios — el único usuario es el que creaste
+arriba con `seed_test_user`. Con ese usuario podés pedir un token:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/auth/token/ \

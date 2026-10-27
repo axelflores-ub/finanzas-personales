@@ -1,5 +1,9 @@
 <script setup>
-defineProps({
+import { computed, ref } from 'vue'
+
+import { useModalA11y } from '../../composables/useModalA11y'
+
+const props = defineProps({
   show: { type: Boolean, default: false },
   title: { type: String, default: 'Confirmar' },
   message: { type: String, default: '¿Confirmás esta acción?' },
@@ -8,11 +12,18 @@ defineProps({
 })
 
 const emit = defineEmits(['confirm', 'cancel'])
+
+const modalRef = ref(null)
+useModalA11y(
+  computed(() => props.show),
+  modalRef,
+  () => emit('cancel'),
+)
 </script>
 
 <template>
   <div v-if="show" class="modal-backdrop-custom" @click.self="emit('cancel')">
-    <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div ref="modalRef" class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">

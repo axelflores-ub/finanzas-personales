@@ -123,6 +123,28 @@ class MovimientoApiTests(APITestCase):
         movimiento.refresh_from_db()
         self.assertEqual(movimiento.monto, Decimal("2500.00"))
 
+    def test_patch_con_monto_negativo_rechazado_y_no_altera_el_dato(self):
+        movimiento = Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, monto=Decimal("1000.00"),
+            fecha="2026-10-01",
+        )
+        response = self.client.patch(detail_url(movimiento.id), {"monto": "-500.00"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("monto", response.data)
+        movimiento.refresh_from_db()
+        self.assertEqual(movimiento.monto, Decimal("1000.00"))
+
+    def test_patch_con_categoria_ajena_rechazado_y_no_altera_el_dato(self):
+        movimiento = Movimiento.objects.create(
+            usuario=self.user, categoria=self.cat_alimentacion, monto=Decimal("1000.00"),
+            fecha="2026-10-01",
+        )
+        response = self.client.patch(detail_url(movimiento.id), {"categoria": self.cat_ajena.id})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("categoria", response.data)
+        movimiento.refresh_from_db()
+        self.assertEqual(movimiento.categoria_id, self.cat_alimentacion.id)
+
     # 6. Eliminar movimientos.
     def test_eliminar_movimiento(self):
         movimiento = Movimiento.objects.create(
