@@ -11,6 +11,20 @@ y visualizar un dashboard con balance mensual y gráficos.
 Python · Django · Django REST Framework · PostgreSQL · Vue 3 · Vite ·
 Bootstrap 5 · Axios · Chart.js
 
+## Documentación
+
+Este README cubre instalación y referencia rápida de la API. Para el resto:
+
+- [docs/DOCUMENTACION_TECNICA.md](docs/DOCUMENTACION_TECNICA.md) — arquitectura,
+  modelo de datos, autenticación, reglas de negocio y cálculos, pensado para
+  quien evalúa el proyecto.
+- [docs/MANUAL_USUARIO.md](docs/MANUAL_USUARIO.md) — guía de uso paso a paso,
+  sin conocimientos de programación.
+- [docs/DIAGRAMAS.md](docs/DIAGRAMAS.md) — diagramas Mermaid (arquitectura,
+  entidad-relación, autenticación, flujo de un movimiento).
+- [CLAUDE.md](CLAUDE.md) — decisiones técnicas y convenciones, etapa por etapa.
+- [IA_USO.md](IA_USO.md) — uso de IA durante el desarrollo.
+
 ## Requisitos
 
 - Python 3.11+
@@ -390,7 +404,9 @@ negocio en [CLAUDE.md](CLAUDE.md).
 - [x] Etapa 4 — Dashboard financiero MVP (resumen + gráfico por categoría)
 - [x] Etapa 5 — Presupuestos mensuales
 - [x] Etapa 6 — Evolución mensual de ingresos y gastos
-- [ ] Etapa 7 — Cierre y documentación final
+- [x] Etapa 7A — Auditoría técnica
+- [x] Etapa 7A.1 — Correcciones de calidad y seguridad
+- [x] Etapa 7B — Documentación técnica y manual de usuario
 
 ## Uso de inteligencia artificial
 

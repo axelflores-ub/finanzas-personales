@@ -313,6 +313,19 @@ alcance a propósito):
   el valor original) — no alcanza con que el endpoint rechace la request,
   hay que confirmar que no mutó nada a medias.
 
+## Documentación técnica y manual de usuario (Etapa 7B)
+
+Se agregó `docs/` con tres documentos verificados contra el código real
+(no contra el diseño original): `DOCUMENTACION_TECNICA.md` (arquitectura,
+modelo de datos, endpoints, reglas de negocio, cálculos, seguridad,
+limitaciones conocidas), `MANUAL_USUARIO.md` (guía de uso sin
+conocimientos de programación) y `DIAGRAMAS.md` (4 diagramas Mermaid:
+arquitectura general, entidad-relación, flujo de autenticación, flujo de
+registro de un movimiento y actualización del dashboard). El README y
+este archivo se dejaron como están en cuanto a contenido técnico — solo
+se agregó un enlace a `docs/` — para no mantener la misma información
+duplicada en dos lugares.
+
 ## Reglas de negocio vigentes
 
 - Un usuario solo puede ver/editar/eliminar sus propios recursos.
