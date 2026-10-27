@@ -47,7 +47,9 @@ function handleLogout() {
     </aside>
 
     <main class="app-main">
-      <router-view />
+      <div class="app-main-inner">
+        <router-view />
+      </div>
     </main>
   </div>
 </template>
@@ -60,7 +62,7 @@ function handleLogout() {
 }
 
 .app-sidebar {
-  background: #14213d;
+  background: var(--color-ink-900);
   color: #fff;
   padding: 1.5rem 1rem;
   display: flex;
@@ -82,9 +84,9 @@ function handleLogout() {
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  background: #fca311;
-  color: #14213d;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: #fff;
   font-weight: 700;
 }
 
@@ -98,14 +100,14 @@ function handleLogout() {
 .sidebar-nav .nav-link {
   color: rgba(255, 255, 255, 0.75);
   padding: 0.5rem 0.9rem;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   white-space: nowrap;
   font-size: 0.9rem;
 }
 
 .sidebar-nav .nav-link.active {
-  background: rgba(252, 163, 17, 0.15);
-  color: #fca311;
+  background: rgba(79, 70, 229, 0.25);
+  color: #a5b4fc;
   font-weight: 600;
 }
 
@@ -147,8 +149,14 @@ function handleLogout() {
 
 .app-main {
   flex: 1;
-  background: #f5f7fb;
-  padding: 1.5rem;
+  background: var(--color-bg);
+  padding: var(--space-6);
+}
+
+.app-main-inner {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  width: 100%;
 }
 
 @media (min-width: 768px) {
@@ -181,7 +189,7 @@ function handleLogout() {
   }
 
   .app-main {
-    padding: 2.5rem;
+    padding: var(--space-12);
   }
 }
 </style>
