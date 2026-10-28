@@ -31,15 +31,19 @@ Chart.register(
   Legend,
 )
 
+// Paleta de categorías del gráfico de dona: distinguible entre sí, en línea
+// con el sistema de diseño (Etapa 8C). No reutiliza los tonos semánticos de
+// ingreso/gasto (verde/rojo) porque todas las porciones de este gráfico son
+// gastos — el color acá solo diferencia categorías, no indica tipo.
 const PALETA = [
-  '#fca311',
-  '#e63946',
-  '#2a9d8f',
-  '#457b9d',
-  '#8338ec',
-  '#ffb703',
-  '#06d6a0',
-  '#f72585',
+  '#4f46e5',
+  '#0d9488',
+  '#d97706',
+  '#db2777',
+  '#7c3aed',
+  '#0ea5e9',
+  '#64748b',
+  '#b91c1c',
 ]
 
 const hoy = new Date()
@@ -182,8 +186,8 @@ function crearEvolucionChart() {
     data: {
       labels: MESES_CORTOS,
       datasets: [
-        { label: 'Ingresos', data: ingresos, backgroundColor: '#198754' },
-        { label: 'Gastos', data: gastos, backgroundColor: '#dc3545' },
+        { label: 'Ingresos', data: ingresos, backgroundColor: '#16a34a' },
+        { label: 'Gastos', data: gastos, backgroundColor: '#dc2626' },
       ],
     },
     options: {
@@ -220,13 +224,13 @@ onBeforeUnmount(() => {
   <div>
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
       <div>
-        <h1 class="h3 mb-1">Resumen financiero</h1>
-        <p class="text-muted mb-0">Tu situación financiera del período seleccionado.</p>
+        <h1 class="page-title mb-1">Resumen financiero</h1>
+        <p class="page-subtitle mb-0">Tu situación financiera del período seleccionado.</p>
       </div>
       <div class="d-flex gap-2">
         <select
           v-model.number="mes"
-          class="form-select form-select-sm w-auto"
+          class="form-select form-select-sm w-auto fp-select"
           aria-label="Mes"
           @change="cargarDashboard"
         >
@@ -236,7 +240,7 @@ onBeforeUnmount(() => {
         </select>
         <select
           v-model.number="anio"
-          class="form-select form-select-sm w-auto"
+          class="form-select form-select-sm w-auto fp-select"
           aria-label="Año"
           @change="cargarDashboard"
         >
@@ -254,30 +258,27 @@ onBeforeUnmount(() => {
 
     <template v-else>
       <div class="row g-3 mb-4">
-        <div class="col-12 col-md-4">
-          <div class="card shadow-sm border-0 h-100 kpi-card kpi-card--ingresos">
+        <div class="col-12 col-sm-6 col-lg-4">
+          <div class="card fp-card h-100">
             <div class="card-body">
-              <div class="text-muted small mb-1">↑ Ingresos totales</div>
-              <div class="h3 mb-0 text-success">{{ formatMonto(resumen?.ingresos ?? 0) }}</div>
+              <div class="kpi-label mb-1">↑ Ingresos totales</div>
+              <div class="kpi-value text-success">{{ formatMonto(resumen?.ingresos ?? 0) }}</div>
             </div>
           </div>
         </div>
-        <div class="col-12 col-md-4">
-          <div class="card shadow-sm border-0 h-100 kpi-card kpi-card--gastos">
+        <div class="col-12 col-sm-6 col-lg-4">
+          <div class="card fp-card h-100">
             <div class="card-body">
-              <div class="text-muted small mb-1">↓ Gastos totales</div>
-              <div class="h3 mb-0 text-danger">{{ formatMonto(resumen?.gastos ?? 0) }}</div>
+              <div class="kpi-label mb-1">↓ Gastos totales</div>
+              <div class="kpi-value text-danger">{{ formatMonto(resumen?.gastos ?? 0) }}</div>
             </div>
           </div>
         </div>
-        <div class="col-12 col-md-4">
-          <div
-            class="card shadow-sm border-0 h-100 kpi-card"
-            :class="balanceClass === 'text-success' ? 'kpi-card--ingresos' : 'kpi-card--gastos'"
-          >
+        <div class="col-12 col-sm-6 col-lg-4">
+          <div class="card fp-card h-100">
             <div class="card-body">
-              <div class="text-muted small mb-1">= Balance disponible</div>
-              <div class="h3 mb-0" :class="balanceClass">
+              <div class="kpi-label mb-1">= Balance disponible</div>
+              <div class="kpi-value" :class="balanceClass">
                 {{ formatMonto(resumen?.balance ?? 0) }}
               </div>
             </div>
@@ -287,9 +288,9 @@ onBeforeUnmount(() => {
 
       <div class="row g-3">
         <div class="col-12 col-lg-5">
-          <div class="card shadow-sm border-0 h-100">
+          <div class="card fp-card h-100">
             <div class="card-body">
-              <h2 class="h5 mb-3">Gastos por categoría</h2>
+              <h2 class="section-title mb-3">Gastos por categoría</h2>
 
               <div v-if="gastosPorCategoria.length === 0" class="text-center text-muted py-5">
                 No hay gastos registrados en este período.
@@ -302,9 +303,9 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="col-12 col-lg-7">
-          <div class="card shadow-sm border-0 h-100">
+          <div class="card fp-card h-100">
             <div class="card-body">
-              <h2 class="h5 mb-3">Evolución mensual · {{ anio }}</h2>
+              <h2 class="section-title mb-3">Evolución mensual · {{ anio }}</h2>
 
               <div v-if="!tieneEvolucion" class="text-center text-muted py-5">
                 No hay movimientos registrados en {{ anio }}.
@@ -317,10 +318,10 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div class="card shadow-sm border-0 mt-4">
+      <div class="card fp-card mt-4">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h5 mb-0">Presupuestos del período</h2>
+            <h2 class="section-title mb-0">Presupuestos del período</h2>
             <router-link :to="{ name: 'presupuestos' }" class="small">Ver detalle →</router-link>
           </div>
 
@@ -334,21 +335,21 @@ onBeforeUnmount(() => {
           <div v-else>
             <div class="row g-3 mb-3 text-center text-md-start">
               <div class="col-12 col-md-4">
-                <div class="text-muted small">Presupuesto total</div>
-                <div class="h5 mb-0">{{ formatMonto(presupuestosResumen.presupuesto_total) }}</div>
+                <div class="mini-label">Presupuesto total</div>
+                <div class="mini-value">{{ formatMonto(presupuestosResumen.presupuesto_total) }}</div>
               </div>
               <div class="col-12 col-md-4">
-                <div class="text-muted small">Gasto real</div>
-                <div class="h5 mb-0">
+                <div class="mini-label">Gasto real</div>
+                <div class="mini-value">
                   {{ formatMonto(presupuestosResumen.gasto_real_presupuestado) }}
                 </div>
               </div>
               <div class="col-12 col-md-4">
-                <div class="text-muted small">Utilizado</div>
-                <div class="h5 mb-0">{{ presupuestosResumen.porcentaje_utilizado }}%</div>
+                <div class="mini-label">Utilizado</div>
+                <div class="mini-value">{{ presupuestosResumen.porcentaje_utilizado }}%</div>
               </div>
             </div>
-            <div class="progress" style="height: 8px">
+            <div class="progress fp-progress" style="height: 8px">
               <div
                 class="progress-bar"
                 :class="`bg-${claseUtilizacion(presupuestosResumen.porcentaje_utilizado)}`"
@@ -365,20 +366,92 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.kpi-card {
-  border-left: 3px solid transparent;
+.page-title {
+  font-size: var(--font-size-xl);
+  margin: 0;
 }
 
-.kpi-card--ingresos {
-  border-left-color: #198754;
+.page-subtitle {
+  color: var(--color-ink-500);
+  font-size: var(--font-size-sm);
 }
 
-.kpi-card--gastos {
-  border-left-color: #dc3545;
+.section-title {
+  font-size: var(--font-size-lg);
+  margin: 0;
+}
+
+.kpi-label {
+  color: var(--color-ink-500);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.kpi-value {
+  font-size: clamp(1.15rem, 4vw, 1.5rem);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mini-label {
+  color: var(--color-ink-500);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.mini-value {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
+.fp-select {
+  border-radius: var(--radius-sm);
+}
+
+.fp-progress {
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
 }
 
 .chart-wrapper {
   position: relative;
   height: 320px;
+}
+
+/*
+ * Colores semánticos exactos del sistema (Etapa 8C): las utilidades de
+ * Bootstrap text-success/text-danger/bg-success/bg-warning/bg-danger traen
+ * su propio verde/amarillo/rojo por defecto. Se redeclaran acá, con alcance
+ * scoped (solo afecta a este componente, no a Categorías/Presupuestos, que
+ * todavía no pasaron por su propia etapa de rediseño).
+ */
+.text-success {
+  color: var(--color-success) !important;
+}
+
+.text-danger {
+  color: var(--color-danger) !important;
+}
+
+.bg-success {
+  background-color: var(--color-success) !important;
+}
+
+.bg-warning {
+  background-color: var(--color-warning) !important;
+}
+
+.bg-danger {
+  background-color: var(--color-danger) !important;
+}
+
+.alert-danger {
+  background-color: var(--color-danger-soft);
+  border-color: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 </style>
