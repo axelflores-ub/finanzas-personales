@@ -414,7 +414,7 @@ negocio en [CLAUDE.md](CLAUDE.md).
 - [x] Etapa 8C — Rediseño visual de Login y Dashboard
 - [x] Etapa 8D — Rediseño visual de Categorías y Movimientos
 - [x] Etapa 8E — Rediseño visual de Presupuestos y modales
-- [ ] Etapa 8F — Rediseño de la navegación mobile
+- [x] Etapa 8F — Rediseño de la navegación mobile
 
 ## Uso de inteligencia artificial
 

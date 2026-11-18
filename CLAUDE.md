@@ -358,9 +358,15 @@ sombra con borde sutil). Se implementó pantalla por pantalla:
   quedar contenida en su propio `.table-responsive`. No se había
   manifestado hasta que una tabla rediseñada fue lo bastante ancha para
   cruzar ese umbral a 768px. Fix de una línea (`min-width: 0`).
-- **Pendiente**: Etapa 8F (rediseño de la navegación mobile, que hoy es
-  una fila horizontal con scroll sin ninguna pista visual de que hay más
-  opciones fuera de pantalla — detectado en la 8A, todavía no corregido).
+- **8F — Navegación mobile**: la fila horizontal con scroll (sin pista
+  visual de que había más opciones fuera de pantalla) se reemplazó por
+  una barra de pestañas fija abajo con los 4 ítems siempre visibles —
+  patrón estándar de apps mobile, elimina el problema de raíz en vez de
+  solo avisar que hay scroll. Barra superior simplificada (logo + avatar
+  + botón de salir). El sidebar de desktop/tablet (`.app-sidebar`,
+  `>=768px`) no se tocó: solo se oculta/muestra con `display` según el
+  ancho, mismo markup y mismos estilos de siempre. Con esto se completa
+  el plan de rediseño visual (Etapas 8A-8F).
 
 ## Reglas de negocio vigentes
 
