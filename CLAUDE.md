@@ -326,6 +326,42 @@ este archivo se dejaron como están en cuanto a contenido técnico — solo
 se agregó un enlace a `docs/` — para no mantener la misma información
 duplicada en dos lugares.
 
+## Rediseño visual (Etapas 8A-8E)
+
+Tras la Etapa 7B se hizo un diagnóstico visual (8A, solo análisis, sin
+código) y se aprobó una propuesta de sistema de diseño fintech/SaaS
+(paleta índigo `#4F46E5` sobre neutros fríos, tipografía Inter, cards sin
+sombra con borde sutil). Se implementó pantalla por pantalla:
+
+- **8B — Fundaciones**: variables CSS en `frontend/src/style.css` (carga
+  después de `bootstrap.min.css`, así que gana por orden sin
+  `!important`). Bootstrap 5.3 trae sus propios estilos de foco
+  (`box-shadow`) con el azul hardcodeado en el CSS compilado, no vía
+  variable, en `.btn`/`.form-control`/`.form-select`/`.nav-link` — se
+  redeclaran puntualmente esas reglas en vez de pelear Bootstrap entero.
+  Clases `.fp-*` (card, btn-primary, btn-outline, btn-danger-soft, badge,
+  table, alert, modal-backdrop, progress) creadas para adopción
+  progresiva etapa por etapa.
+- **8C — Login y Dashboard**. **8D — Categorías y Movimientos** (agregó
+  `.fp-table`/`.fp-table-wrap` con un indicador de scroll horizontal sin
+  JS — técnica de "scroll shadow" con gradientes CSS). **8E —
+  Presupuestos y los 4 modales** (consolidó en `style.css` varias reglas
+  que habían quedado duplicadas como scoped casi idénticas en 3-4
+  componentes — `.fp-alert`, `.fp-modal-backdrop`, `.fp-progress`,
+  colores semánticos — resolviendo en el mismo pase el hallazgo de
+  duplicación de la auditoría 7A, porque ya se estaban tocando todos esos
+  componentes).
+- **Bug de flexbox preexistente, encontrado en la 8D**: `.app-main`
+  (`AppLayout.vue`) es `flex: 1` sin `min-width: 0` desde la Etapa 0 — por
+  defecto un hijo flex nunca se achica más que su contenido, así que una
+  tabla ancha fuerza el desborde horizontal de toda la página en vez de
+  quedar contenida en su propio `.table-responsive`. No se había
+  manifestado hasta que una tabla rediseñada fue lo bastante ancha para
+  cruzar ese umbral a 768px. Fix de una línea (`min-width: 0`).
+- **Pendiente**: Etapa 8F (rediseño de la navegación mobile, que hoy es
+  una fila horizontal con scroll sin ninguna pista visual de que hay más
+  opciones fuera de pantalla — detectado en la 8A, todavía no corregido).
+
 ## Reglas de negocio vigentes
 
 - Un usuario solo puede ver/editar/eliminar sus propios recursos.

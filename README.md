@@ -407,6 +407,12 @@ negocio en [CLAUDE.md](CLAUDE.md).
 - [x] Etapa 7A — Auditoría técnica
 - [x] Etapa 7A.1 — Correcciones de calidad y seguridad
 - [x] Etapa 7B — Documentación técnica y manual de usuario
+- [x] Etapa 8A — Análisis UX/UI y propuesta de rediseño visual
+- [x] Etapa 8B — Fundaciones del sistema de diseño
+- [x] Etapa 8C — Rediseño visual de Login y Dashboard
+- [x] Etapa 8D — Rediseño visual de Categorías y Movimientos
+- [x] Etapa 8E — Rediseño visual de Presupuestos y modales
+- [ ] Etapa 8F — Rediseño de la navegación mobile
 
 ## Uso de inteligencia artificial
 
