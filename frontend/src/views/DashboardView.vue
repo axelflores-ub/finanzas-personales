@@ -254,7 +254,7 @@ onBeforeUnmount(() => {
       Cargando dashboard...
     </div>
 
-    <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
+    <div v-else-if="error" class="alert fp-alert fp-alert--danger">{{ error }}</div>
 
     <template v-else>
       <div class="row g-3 mb-4">
@@ -411,47 +411,8 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-sm);
 }
 
-.fp-progress {
-  background: var(--color-border);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
 .chart-wrapper {
   position: relative;
   height: 320px;
-}
-
-/*
- * Colores semánticos exactos del sistema (Etapa 8C): las utilidades de
- * Bootstrap text-success/text-danger/bg-success/bg-warning/bg-danger traen
- * su propio verde/amarillo/rojo por defecto. Se redeclaran acá, con alcance
- * scoped (solo afecta a este componente, no a Categorías/Presupuestos, que
- * todavía no pasaron por su propia etapa de rediseño).
- */
-.text-success {
-  color: var(--color-success) !important;
-}
-
-.text-danger {
-  color: var(--color-danger) !important;
-}
-
-.bg-success {
-  background-color: var(--color-success) !important;
-}
-
-.bg-warning {
-  background-color: var(--color-warning) !important;
-}
-
-.bg-danger {
-  background-color: var(--color-danger) !important;
-}
-
-.alert-danger {
-  background-color: var(--color-danger-soft);
-  border-color: var(--color-danger-soft);
-  color: var(--color-danger);
 }
 </style>

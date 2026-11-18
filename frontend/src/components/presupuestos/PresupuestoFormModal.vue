@@ -58,7 +58,7 @@ function handleSubmit() {
 </script>
 
 <template>
-  <div v-if="show" class="modal-backdrop-custom" @click.self="emit('cancel')">
+  <div v-if="show" class="fp-modal-backdrop" @click.self="emit('cancel')">
     <div ref="modalRef" class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -75,7 +75,7 @@ function handleSubmit() {
               ></button>
             </div>
             <div class="modal-body">
-              <div v-if="errorMessage" class="alert alert-danger py-2 small" role="alert">
+              <div v-if="errorMessage" class="alert fp-alert fp-alert--danger py-2 small" role="alert">
                 {{ errorMessage }}
               </div>
 
@@ -128,12 +128,12 @@ function handleSubmit() {
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" @click="emit('cancel')">
+              <button type="button" class="btn fp-btn-outline" @click="emit('cancel')">
                 Cancelar
               </button>
               <button
                 type="submit"
-                class="btn btn-primary"
+                class="btn fp-btn-primary"
                 :disabled="saving || categoriasGasto.length === 0"
               >
                 <span v-if="saving" class="spinner-border spinner-border-sm me-2"></span>
@@ -146,16 +146,3 @@ function handleSubmit() {
     </div>
   </div>
 </template>
-
-<style scoped>
-.modal-backdrop-custom {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  z-index: 1055;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-</style>

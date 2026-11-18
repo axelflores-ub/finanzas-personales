@@ -133,7 +133,7 @@ function tipoLabel(tipo) {
     </div>
 
     <transition name="fade">
-      <div v-if="feedback" class="alert view-alert" :class="`view-alert--${feedback.type}`" role="alert">
+      <div v-if="feedback" class="alert fp-alert" :class="`fp-alert--${feedback.type}`" role="alert">
         {{ feedback.message }}
       </div>
     </transition>
@@ -226,20 +226,6 @@ function tipoLabel(tipo) {
 .page-subtitle {
   color: var(--color-ink-500);
   font-size: var(--font-size-sm);
-}
-
-.view-alert {
-  border: 1px solid transparent;
-}
-.view-alert--success {
-  background: var(--color-success-soft);
-  border-color: var(--color-success-soft);
-  color: var(--color-success);
-}
-.view-alert--danger {
-  background: var(--color-danger-soft);
-  border-color: var(--color-danger-soft);
-  color: var(--color-danger);
 }
 
 .fade-enter-active,

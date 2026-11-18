@@ -229,3 +229,81 @@ h6 {
     18px 100%;
   background-attachment: local, local, scroll, scroll;
 }
+
+/*
+ * Etapa 8E: Presupuestos + los 4 modales. Estas reglas estaban duplicadas
+ * como estilos "scoped" casi idénticos en 3-4 componentes distintos
+ * (alertas de feedback, barra de progreso, colores semánticos de texto/
+ * fondo) — hallazgo de duplicación de la auditoría 7A. Ahora que se tocan
+ * todos esos componentes en la misma etapa, se consolidan acá una sola vez
+ * y se quitan las copias scoped de cada vista.
+ */
+
+/* Modal: mismo radio/borde que el resto de las superficies del sistema. */
+:root {
+  --bs-modal-border-color: var(--color-border);
+  --bs-modal-border-radius: var(--radius-lg);
+  --bs-modal-header-border-color: var(--color-border);
+  --bs-modal-footer-border-color: var(--color-border);
+}
+
+/* Antes duplicado como ".modal-backdrop-custom" en cada uno de los 4 modales. */
+.fp-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  z-index: 1055;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Antes duplicado como ".view-alert" (Categorías/Movimientos) y ".login-alert" (Login). */
+.fp-alert {
+  border: 1px solid transparent;
+}
+.fp-alert--success {
+  background: var(--color-success-soft);
+  border-color: var(--color-success-soft);
+  color: var(--color-success);
+}
+.fp-alert--danger {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.fp-alert--warning {
+  background: var(--color-warning-soft);
+  border-color: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+/* Antes duplicado como ".fp-progress" scoped en DashboardView.vue. */
+.fp-progress {
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+/*
+ * Colores semánticos exactos del sistema. Bootstrap hardcodea su propio
+ * verde/amarillo/rojo en estas utilidades (no vía variable), así que se
+ * redeclaran acá una sola vez para toda la app — antes estaba duplicado
+ * como scoped en DashboardView.vue y MovimientosView.vue.
+ */
+.text-success {
+  color: var(--color-success) !important;
+}
+.text-danger {
+  color: var(--color-danger) !important;
+}
+.bg-success {
+  background-color: var(--color-success) !important;
+}
+.bg-warning {
+  background-color: var(--color-warning) !important;
+}
+.bg-danger {
+  background-color: var(--color-danger) !important;
+}

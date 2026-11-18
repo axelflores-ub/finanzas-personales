@@ -178,14 +178,14 @@ function extractErrorMessage(error, fallback) {
     </div>
 
     <transition name="fade">
-      <div v-if="feedback" class="alert view-alert" :class="`view-alert--${feedback.type}`" role="alert">
+      <div v-if="feedback" class="alert fp-alert" :class="`fp-alert--${feedback.type}`" role="alert">
         {{ feedback.message }}
       </div>
     </transition>
 
     <div class="card fp-card mb-3">
       <div class="card-body">
-        <div v-if="filtroError" class="alert view-alert view-alert--danger py-2 small mb-3">
+        <div v-if="filtroError" class="alert fp-alert fp-alert--danger py-2 small mb-3">
           {{ filtroError }}
         </div>
         <div class="row g-2 align-items-end">
@@ -345,28 +345,6 @@ function extractErrorMessage(error, fallback) {
 .page-subtitle {
   color: var(--color-ink-500);
   font-size: var(--font-size-sm);
-}
-
-.view-alert {
-  border: 1px solid transparent;
-}
-.view-alert--success {
-  background: var(--color-success-soft);
-  border-color: var(--color-success-soft);
-  color: var(--color-success);
-}
-.view-alert--danger {
-  background: var(--color-danger-soft);
-  border-color: var(--color-danger-soft);
-  color: var(--color-danger);
-}
-
-/* Alcance scoped: no afecta a Presupuestos, que todavía no pasó por su etapa. */
-.text-success {
-  color: var(--color-success) !important;
-}
-.text-danger {
-  color: var(--color-danger) !important;
 }
 
 .fade-enter-active,

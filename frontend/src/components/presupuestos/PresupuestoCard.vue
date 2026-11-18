@@ -17,7 +17,7 @@ const restanteEsNegativo = computed(() => Number(props.presupuesto.restante) < 0
 </script>
 
 <template>
-  <div class="card shadow-sm border-0 mb-3">
+  <div class="card fp-card mb-3">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
         <div>
@@ -26,12 +26,12 @@ const restanteEsNegativo = computed(() => Number(props.presupuesto.restante) < 0
             {{ formatMonto(presupuesto.gasto_real) }} de {{ formatMonto(presupuesto.monto_limite) }}
           </div>
         </div>
-        <span class="badge rounded-pill" :class="`text-bg-${clase}`">
+        <span class="badge rounded-pill" :class="`fp-badge-${clase}`">
           {{ presupuesto.porcentaje_utilizado }}%
         </span>
       </div>
 
-      <div class="progress mb-2" style="height: 8px">
+      <div class="progress fp-progress mb-2" style="height: 8px">
         <div class="progress-bar" :class="`bg-${clase}`" :style="{ width: anchoBarra + '%' }"></div>
       </div>
 
@@ -43,14 +43,14 @@ const restanteEsNegativo = computed(() => Number(props.presupuesto.restante) < 0
         <div>
           <button
             type="button"
-            class="btn btn-sm btn-outline-secondary me-2"
+            class="btn btn-sm fp-btn-outline me-2"
             @click="$emit('editar', presupuesto)"
           >
             Editar
           </button>
           <button
             type="button"
-            class="btn btn-sm btn-outline-danger"
+            class="btn btn-sm fp-btn-danger-soft"
             @click="$emit('eliminar', presupuesto)"
           >
             Eliminar

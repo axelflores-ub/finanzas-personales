@@ -19,10 +19,16 @@ useModalA11y(
   modalRef,
   () => emit('cancel'),
 )
+
+// 'danger' usa la variante suave del sistema (misma que Eliminar en las
+// tablas); cualquier otra variante cae en la clase sólida de Bootstrap.
+const confirmButtonClass = computed(() =>
+  props.confirmVariant === 'danger' ? 'fp-btn-danger-soft' : `btn-${props.confirmVariant}`,
+)
 </script>
 
 <template>
-  <div v-if="show" class="modal-backdrop-custom" @click.self="emit('cancel')">
+  <div v-if="show" class="fp-modal-backdrop" @click.self="emit('cancel')">
     <div ref="modalRef" class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -39,15 +45,10 @@ useModalA11y(
             <p class="mb-0">{{ message }}</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="emit('cancel')">
+            <button type="button" class="btn fp-btn-outline" @click="emit('cancel')">
               Cancelar
             </button>
-            <button
-              type="button"
-              class="btn"
-              :class="`btn-${confirmVariant}`"
-              @click="emit('confirm')"
-            >
+            <button type="button" class="btn" :class="confirmButtonClass" @click="emit('confirm')">
               {{ confirmLabel }}
             </button>
           </div>
@@ -56,16 +57,3 @@ useModalA11y(
     </div>
   </div>
 </template>
-
-<style scoped>
-.modal-backdrop-custom {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  z-index: 1055;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-</style>

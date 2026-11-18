@@ -44,7 +44,7 @@ async function handleSubmit() {
           <p class="login-subtitle mb-0">Iniciá sesión para continuar</p>
         </div>
 
-        <div v-if="sessionExpired" class="alert login-alert login-alert--warning py-2 small">
+        <div v-if="sessionExpired" class="alert fp-alert fp-alert--warning py-2 small">
           Tu sesión expiró. Volvé a iniciar sesión.
         </div>
 
@@ -72,7 +72,7 @@ async function handleSubmit() {
             />
           </div>
 
-          <div v-if="errorMessage" class="alert login-alert login-alert--danger py-2 small" role="alert">
+          <div v-if="errorMessage" class="alert fp-alert fp-alert--danger py-2 small" role="alert">
             {{ errorMessage }}
           </div>
 
@@ -125,19 +125,4 @@ async function handleSubmit() {
   font-size: var(--font-size-sm);
 }
 
-.login-alert {
-  border: 1px solid transparent;
-}
-
-.login-alert--danger {
-  background: var(--color-danger-soft);
-  border-color: var(--color-danger-soft);
-  color: var(--color-danger);
-}
-
-.login-alert--warning {
-  background: var(--color-warning-soft);
-  border-color: var(--color-warning-soft);
-  color: var(--color-warning);
-}
 </style>

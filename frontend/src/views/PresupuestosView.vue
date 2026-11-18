@@ -159,8 +159,8 @@ function extractErrorMessage(error, fallback) {
   <div>
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
       <div>
-        <h1 class="h3 mb-1">Presupuestos</h1>
-        <p class="text-muted mb-0">Definí límites de gasto por categoría y seguí su uso.</p>
+        <h1 class="page-title mb-1">Presupuestos</h1>
+        <p class="page-subtitle mb-0">Definí límites de gasto por categoría y seguí su uso.</p>
       </div>
       <div class="d-flex gap-2 align-items-center flex-wrap">
         <select
@@ -181,40 +181,40 @@ function extractErrorMessage(error, fallback) {
         >
           <option v-for="a in aniosDisponibles()" :key="a" :value="a">{{ a }}</option>
         </select>
-        <button type="button" class="btn btn-primary" @click="openCreateForm">
+        <button type="button" class="btn fp-btn-primary" @click="openCreateForm">
           + Nuevo presupuesto
         </button>
       </div>
     </div>
 
     <transition name="fade">
-      <div v-if="feedback" class="alert" :class="`alert-${feedback.type}`" role="alert">
+      <div v-if="feedback" class="alert fp-alert" :class="`fp-alert--${feedback.type}`" role="alert">
         {{ feedback.message }}
       </div>
     </transition>
 
     <div v-if="!loading && !loadError && presupuestos.length > 0" class="row g-3 mb-4">
-      <div class="col-12 col-md-4">
-        <div class="card shadow-sm border-0 h-100">
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card fp-card h-100">
           <div class="card-body">
-            <div class="text-muted small mb-1">Presupuesto total</div>
-            <div class="h4 mb-0">{{ formatMonto(totales.presupuestoTotal) }}</div>
+            <div class="kpi-label mb-1">Presupuesto total</div>
+            <div class="kpi-value">{{ formatMonto(totales.presupuestoTotal) }}</div>
           </div>
         </div>
       </div>
-      <div class="col-12 col-md-4">
-        <div class="card shadow-sm border-0 h-100">
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card fp-card h-100">
           <div class="card-body">
-            <div class="text-muted small mb-1">Gasto real</div>
-            <div class="h4 mb-0">{{ formatMonto(totales.gastoReal) }}</div>
+            <div class="kpi-label mb-1">Gasto real</div>
+            <div class="kpi-value">{{ formatMonto(totales.gastoReal) }}</div>
           </div>
         </div>
       </div>
-      <div class="col-12 col-md-4">
-        <div class="card shadow-sm border-0 h-100">
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card fp-card h-100">
           <div class="card-body">
-            <div class="text-muted small mb-1">Disponible</div>
-            <div class="h4 mb-0" :class="totales.disponible < 0 ? 'text-danger' : 'text-success'">
+            <div class="kpi-label mb-1">Disponible</div>
+            <div class="kpi-value" :class="totales.disponible < 0 ? 'text-danger' : 'text-success'">
               {{ formatMonto(totales.disponible) }}
             </div>
           </div>
@@ -227,9 +227,9 @@ function extractErrorMessage(error, fallback) {
       Cargando presupuestos...
     </div>
 
-    <div v-else-if="loadError" class="alert alert-danger">{{ loadError }}</div>
+    <div v-else-if="loadError" class="alert fp-alert fp-alert--danger">{{ loadError }}</div>
 
-    <div v-else-if="presupuestos.length === 0" class="card shadow-sm border-0">
+    <div v-else-if="presupuestos.length === 0" class="card fp-card">
       <div class="card-body p-5 text-center text-muted">
         No definiste presupuestos para este período. Creá el primero con el botón de arriba.
       </div>
@@ -270,6 +270,30 @@ function extractErrorMessage(error, fallback) {
 </template>
 
 <style scoped>
+.page-title {
+  font-size: var(--font-size-xl);
+  margin: 0;
+}
+
+.page-subtitle {
+  color: var(--color-ink-500);
+  font-size: var(--font-size-sm);
+}
+
+.kpi-label {
+  color: var(--color-ink-500);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.kpi-value {
+  font-size: clamp(1.15rem, 4vw, 1.5rem);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
