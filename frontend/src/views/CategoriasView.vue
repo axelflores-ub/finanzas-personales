@@ -124,21 +124,21 @@ function tipoLabel(tipo) {
   <div>
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
       <div>
-        <h1 class="h3 mb-1">Categorías</h1>
-        <p class="text-muted mb-0">Organizá tus ingresos y gastos por categoría.</p>
+        <h1 class="page-title mb-1">Categorías</h1>
+        <p class="page-subtitle mb-0">Organizá tus ingresos y gastos por categoría.</p>
       </div>
-      <button type="button" class="btn btn-primary" @click="openCreateForm">
+      <button type="button" class="btn fp-btn-primary" @click="openCreateForm">
         + Nueva categoría
       </button>
     </div>
 
     <transition name="fade">
-      <div v-if="feedback" class="alert" :class="`alert-${feedback.type}`" role="alert">
+      <div v-if="feedback" class="alert view-alert" :class="`view-alert--${feedback.type}`" role="alert">
         {{ feedback.message }}
       </div>
     </transition>
 
-    <div class="card shadow-sm border-0">
+    <div class="card fp-card">
       <div class="card-body p-0">
         <div v-if="loading" class="p-5 text-center text-muted">
           <div class="spinner-border spinner-border-sm me-2" role="status"></div>
@@ -153,8 +153,8 @@ function tipoLabel(tipo) {
           Todavía no tenés categorías. Creá la primera con el botón de arriba.
         </div>
 
-        <div v-else class="table-responsive">
-          <table class="table table-hover mb-0 align-middle">
+        <div v-else class="table-responsive fp-table-wrap">
+          <table class="table fp-table mb-0 align-middle">
             <thead>
               <tr>
                 <th>Nombre</th>
@@ -164,11 +164,11 @@ function tipoLabel(tipo) {
             </thead>
             <tbody>
               <tr v-for="categoria in categorias" :key="categoria.id">
-                <td>{{ categoria.nombre }}</td>
+                <td class="fw-medium">{{ categoria.nombre }}</td>
                 <td>
                   <span
                     class="badge rounded-pill"
-                    :class="categoria.tipo === 'INGRESO' ? 'text-bg-success' : 'text-bg-danger'"
+                    :class="categoria.tipo === 'INGRESO' ? 'fp-badge-success' : 'fp-badge-danger'"
                   >
                     {{ tipoLabel(categoria.tipo) }}
                   </span>
@@ -176,14 +176,14 @@ function tipoLabel(tipo) {
                 <td class="text-end">
                   <button
                     type="button"
-                    class="btn btn-sm btn-outline-secondary me-2"
+                    class="btn btn-sm fp-btn-outline me-2"
                     @click="openEditForm(categoria)"
                   >
                     Editar
                   </button>
                   <button
                     type="button"
-                    class="btn btn-sm btn-outline-danger"
+                    class="btn btn-sm fp-btn-danger-soft"
                     @click="askDelete(categoria)"
                   >
                     Eliminar
@@ -218,6 +218,30 @@ function tipoLabel(tipo) {
 </template>
 
 <style scoped>
+.page-title {
+  font-size: var(--font-size-xl);
+  margin: 0;
+}
+
+.page-subtitle {
+  color: var(--color-ink-500);
+  font-size: var(--font-size-sm);
+}
+
+.view-alert {
+  border: 1px solid transparent;
+}
+.view-alert--success {
+  background: var(--color-success-soft);
+  border-color: var(--color-success-soft);
+  color: var(--color-success);
+}
+.view-alert--danger {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;

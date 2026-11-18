@@ -149,6 +149,10 @@ function handleLogout() {
 
 .app-main {
   flex: 1;
+  min-width: 0; /* por defecto un hijo flex no se achica más que su contenido
+                   (ej. una tabla ancha) y fuerza scroll horizontal de toda
+                   la página; esto lo deja encogerse y que .table-responsive
+                   contenga su propio scroll en vez de desbordar el layout */
   background: var(--color-bg);
   padding: var(--space-6);
 }

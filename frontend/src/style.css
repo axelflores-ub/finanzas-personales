@@ -153,3 +153,79 @@ h6 {
   background: var(--color-warning-soft);
   color: var(--color-warning);
 }
+
+.fp-btn-outline {
+  background-color: #fff;
+  border-color: var(--color-border);
+  color: var(--color-ink-700);
+}
+.fp-btn-outline:hover,
+.fp-btn-outline:focus {
+  background-color: var(--color-bg);
+  border-color: var(--color-ink-500);
+  color: var(--color-ink-900);
+}
+
+.fp-btn-danger-soft {
+  background-color: var(--color-danger-soft);
+  border-color: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.fp-btn-danger-soft:hover,
+.fp-btn-danger-soft:focus {
+  background-color: #fee2e2;
+  border-color: #fee2e2;
+  color: var(--color-danger);
+}
+
+/*
+ * Tabla discreta: cabecera muted en mayúsculas sobre el fondo de la app,
+ * separadores sutiles en vez de los bordes grises por defecto de Bootstrap.
+ * Se apoya en las variables de tema que .table sí expone
+ * (--bs-table-border-color, --bs-table-hover-bg) para no competir con los
+ * bordes propios de Bootstrap.
+ */
+.fp-table {
+  --bs-table-border-color: var(--color-border);
+  --bs-table-hover-bg: var(--color-bg);
+}
+.fp-table thead th {
+  background: var(--color-bg);
+  color: var(--color-ink-500);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.75rem 1rem;
+}
+.fp-table tbody td {
+  padding: 0.875rem 1rem;
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * Indicador de scroll horizontal (Etapa 8D): en mobile/tablet, cuando
+ * .fp-table no entra en el ancho disponible, .table-responsive ya contiene
+ * el scroll dentro de la tarjeta (nunca desborda la página), pero sin esto
+ * no hay ninguna pista visual de que hay más columnas para el costado.
+ * Técnica de "scroll shadow" sin JS: dos gradientes grises que solo se ven
+ * en el borde que todavía tiene contenido para scrollear, superpuestos a
+ * dos gradientes del color de la superficie que se mueven con el contenido
+ * y tapan la sombra del lado ya scrolleado.
+ */
+.fp-table-wrap {
+  overflow-x: auto;
+  background:
+    linear-gradient(to right, var(--color-surface) 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(to left, var(--color-surface) 30%, rgba(255, 255, 255, 0)) 100% 0,
+    linear-gradient(to right, rgba(15, 23, 42, 0.22), rgba(15, 23, 42, 0)),
+    linear-gradient(to left, rgba(15, 23, 42, 0.22), rgba(15, 23, 42, 0)) 100% 0;
+  background-repeat: no-repeat;
+  background-color: var(--color-surface);
+  background-size:
+    28px 100%,
+    28px 100%,
+    18px 100%,
+    18px 100%;
+  background-attachment: local, local, scroll, scroll;
+}

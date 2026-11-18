@@ -169,27 +169,27 @@ function extractErrorMessage(error, fallback) {
   <div>
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
       <div>
-        <h1 class="h3 mb-1">Movimientos</h1>
-        <p class="text-muted mb-0">Registrá y consultá tus ingresos y gastos.</p>
+        <h1 class="page-title mb-1">Movimientos</h1>
+        <p class="page-subtitle mb-0">Registrá y consultá tus ingresos y gastos.</p>
       </div>
-      <button type="button" class="btn btn-primary" @click="openCreateForm">
+      <button type="button" class="btn fp-btn-primary" @click="openCreateForm">
         + Nuevo movimiento
       </button>
     </div>
 
     <transition name="fade">
-      <div v-if="feedback" class="alert" :class="`alert-${feedback.type}`" role="alert">
+      <div v-if="feedback" class="alert view-alert" :class="`view-alert--${feedback.type}`" role="alert">
         {{ feedback.message }}
       </div>
     </transition>
 
-    <div class="card shadow-sm border-0 mb-3">
+    <div class="card fp-card mb-3">
       <div class="card-body">
-        <div v-if="filtroError" class="alert alert-danger py-2 small mb-3">
+        <div v-if="filtroError" class="alert view-alert view-alert--danger py-2 small mb-3">
           {{ filtroError }}
         </div>
         <div class="row g-2 align-items-end">
-          <div class="col-6 col-md-2">
+          <div class="col-6 col-lg-2">
             <label class="form-label small mb-1" for="filtro-fecha-desde">Desde</label>
             <input
               id="filtro-fecha-desde"
@@ -198,7 +198,7 @@ function extractErrorMessage(error, fallback) {
               class="form-control form-control-sm"
             />
           </div>
-          <div class="col-6 col-md-2">
+          <div class="col-6 col-lg-2">
             <label class="form-label small mb-1" for="filtro-fecha-hasta">Hasta</label>
             <input
               id="filtro-fecha-hasta"
@@ -207,7 +207,7 @@ function extractErrorMessage(error, fallback) {
               class="form-control form-control-sm"
             />
           </div>
-          <div class="col-6 col-md-2">
+          <div class="col-6 col-lg-2">
             <label class="form-label small mb-1" for="filtro-tipo">Tipo</label>
             <select
               id="filtro-tipo"
@@ -220,7 +220,7 @@ function extractErrorMessage(error, fallback) {
               <option value="GASTO">Gasto</option>
             </select>
           </div>
-          <div class="col-6 col-md-3">
+          <div class="col-6 col-lg-3">
             <label class="form-label small mb-1" for="filtro-categoria">Categoría</label>
             <select id="filtro-categoria" v-model="filtroCategoria" class="form-select form-select-sm">
               <option value="">Todas</option>
@@ -233,11 +233,11 @@ function extractErrorMessage(error, fallback) {
               </option>
             </select>
           </div>
-          <div class="col-12 col-md-3 d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-primary flex-fill" @click="cargarMovimientos">
+          <div class="col-12 col-lg-3 d-flex gap-2">
+            <button type="button" class="btn btn-sm fp-btn-primary flex-fill" @click="cargarMovimientos">
               Filtrar
             </button>
-            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" @click="limpiarFiltros">
+            <button type="button" class="btn btn-sm fp-btn-outline flex-fill" @click="limpiarFiltros">
               Limpiar
             </button>
           </div>
@@ -245,7 +245,7 @@ function extractErrorMessage(error, fallback) {
       </div>
     </div>
 
-    <div class="card shadow-sm border-0">
+    <div class="card fp-card">
       <div class="card-body p-0">
         <div v-if="loading" class="p-5 text-center text-muted">
           <div class="spinner-border spinner-border-sm me-2" role="status"></div>
@@ -260,8 +260,8 @@ function extractErrorMessage(error, fallback) {
           No hay movimientos para los filtros seleccionados.
         </div>
 
-        <div v-else class="table-responsive">
-          <table class="table table-hover mb-0 align-middle">
+        <div v-else class="table-responsive fp-table-wrap">
+          <table class="table fp-table mb-0 align-middle">
             <thead>
               <tr>
                 <th>Fecha</th>
@@ -274,34 +274,34 @@ function extractErrorMessage(error, fallback) {
             </thead>
             <tbody>
               <tr v-for="movimiento in movimientos" :key="movimiento.id">
-                <td>{{ formatFecha(movimiento.fecha) }}</td>
+                <td class="text-nowrap">{{ formatFecha(movimiento.fecha) }}</td>
                 <td class="text-muted">{{ movimiento.descripcion || '—' }}</td>
                 <td>{{ movimiento.categoria_nombre }}</td>
                 <td>
                   <span
                     class="badge rounded-pill"
-                    :class="movimiento.tipo === 'INGRESO' ? 'text-bg-success' : 'text-bg-danger'"
+                    :class="movimiento.tipo === 'INGRESO' ? 'fp-badge-success' : 'fp-badge-danger'"
                   >
                     {{ movimiento.tipo === 'INGRESO' ? 'Ingreso' : 'Gasto' }}
                   </span>
                 </td>
                 <td
-                  class="text-end fw-semibold"
+                  class="text-end fw-semibold text-nowrap"
                   :class="movimiento.tipo === 'INGRESO' ? 'text-success' : 'text-danger'"
                 >
                   {{ formatMonto(movimiento.monto) }}
                 </td>
-                <td class="text-end">
+                <td class="text-end text-nowrap">
                   <button
                     type="button"
-                    class="btn btn-sm btn-outline-secondary me-2"
+                    class="btn btn-sm fp-btn-outline me-2"
                     @click="openEditForm(movimiento)"
                   >
                     Editar
                   </button>
                   <button
                     type="button"
-                    class="btn btn-sm btn-outline-danger"
+                    class="btn btn-sm fp-btn-danger-soft"
                     @click="askDelete(movimiento)"
                   >
                     Eliminar
@@ -337,6 +337,38 @@ function extractErrorMessage(error, fallback) {
 </template>
 
 <style scoped>
+.page-title {
+  font-size: var(--font-size-xl);
+  margin: 0;
+}
+
+.page-subtitle {
+  color: var(--color-ink-500);
+  font-size: var(--font-size-sm);
+}
+
+.view-alert {
+  border: 1px solid transparent;
+}
+.view-alert--success {
+  background: var(--color-success-soft);
+  border-color: var(--color-success-soft);
+  color: var(--color-success);
+}
+.view-alert--danger {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+/* Alcance scoped: no afecta a Presupuestos, que todavía no pasó por su etapa. */
+.text-success {
+  color: var(--color-success) !important;
+}
+.text-danger {
+  color: var(--color-danger) !important;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
