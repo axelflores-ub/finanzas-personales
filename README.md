@@ -22,6 +22,8 @@ Este README cubre instalación y referencia rápida de la API. Para el resto:
   sin conocimientos de programación.
 - [docs/DIAGRAMAS.md](docs/DIAGRAMAS.md) — diagramas Mermaid (arquitectura,
   entidad-relación, autenticación, flujo de un movimiento).
+- [docs/DOCUMENTACION_COMERCIAL.md](docs/DOCUMENTACION_COMERCIAL.md) —
+  caso de negocio: problema, propuesta de valor, público objetivo.
 - [CLAUDE.md](CLAUDE.md) — decisiones técnicas y convenciones, etapa por etapa.
 - [IA_USO.md](IA_USO.md) — uso de IA durante el desarrollo.
 
