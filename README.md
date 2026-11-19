@@ -419,3 +419,7 @@ negocio en [CLAUDE.md](CLAUDE.md).
 ## Uso de inteligencia artificial
 
 Ver [IA_USO.md](IA_USO.md).
+
+## Licencia
+
+MIT — ver [LICENSE](LICENSE).
