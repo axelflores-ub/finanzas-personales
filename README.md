@@ -26,6 +26,11 @@ Este README cubre instalación y referencia rápida de la API. Para el resto:
   caso de negocio: problema, propuesta de valor, público objetivo.
 - [Landing page](https://claude.ai/artifact/PcZA6iuN4jQic8jYsBTbtS) — presentación
   visual del producto, pensada para quien evalúa el proyecto.
+- [docs/Ficha_Tecnica.docx](docs/Ficha_Tecnica.docx) — ficha técnica del proyecto.
+- [docs/Finanzas_Personales_Defensa_UB.pptx](docs/Finanzas_Personales_Defensa_UB.pptx) —
+  presentación técnica-comercial para la defensa oral.
+- [Demo pre-grabada](https://www.loom.com/share/972d5746590942d5ad8da258674bea8b) —
+  recorrido funcional del producto en video, de respaldo para la defensa.
 - [CLAUDE.md](CLAUDE.md) — decisiones técnicas y convenciones, etapa por etapa.
 - [IA_USO.md](IA_USO.md) — uso de IA durante el desarrollo.
 
